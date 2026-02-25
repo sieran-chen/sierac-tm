@@ -6,7 +6,8 @@ ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 RUN pip install --no-cache-dir --timeout 120 \
     ${PIP_INDEX_URL:+--index-url ${PIP_INDEX_URL}} \
     poetry \
-    && poetry config virtualenvs.create false
+    && poetry config virtualenvs.create false \
+    && if [ -n "${PIP_INDEX_URL}" ]; then poetry source add --priority=primary default "${PIP_INDEX_URL}"; fi
 
 WORKDIR /app
 

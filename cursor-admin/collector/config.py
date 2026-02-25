@@ -7,9 +7,13 @@ class Settings(BaseSettings):
     # 数据库
     database_url: str = "postgresql+asyncpg://cursor:cursor@db:5432/cursor_admin"
 
-    # Cursor Admin API
+    # Cursor Admin API（需 Team/Enterprise 管理员在 dashboard 创建的 Admin API Key）
     cursor_api_token: str = ""
     cursor_api_url: str = "https://api.cursor.com"
+
+    def get_cursor_token(self) -> str:
+        """返回去除首尾空白与 CRLF 的 token，避免 .env 导致 401。"""
+        return (self.cursor_api_token or "").strip().replace("\r", "").replace("\n", "")
 
     # 同步间隔（分钟）
     sync_interval_minutes: int = 60

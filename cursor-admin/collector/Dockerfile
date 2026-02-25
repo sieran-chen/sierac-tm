@@ -6,13 +6,13 @@ ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 RUN pip install --no-cache-dir --timeout 120 \
     ${PIP_INDEX_URL:+--index-url ${PIP_INDEX_URL}} \
     poetry \
-    && poetry config virtualenvs.create false
+    && poetry config virtualenvs.create false \
+    && if [ -n "${PIP_INDEX_URL}" ]; then poetry config repositories.default "${PIP_INDEX_URL}"; fi
 
 WORKDIR /app
 
 COPY collector/pyproject.toml collector/poetry.lock ./
-RUN if [ -n "${PIP_INDEX_URL}" ]; then poetry source add --priority=primary default "${PIP_INDEX_URL}"; fi \
-    && poetry install --only main --no-interaction --no-root
+RUN poetry install --only main --no-interaction --no-root
 
 COPY collector/ ./
 COPY db/ /db/

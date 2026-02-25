@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir --timeout 120 \
 WORKDIR /app
 
 COPY collector/pyproject.toml collector/poetry.lock ./
-RUN poetry install --no-dev --no-interaction --no-root
+RUN poetry install --only main --no-interaction --no-root
 
 COPY collector/ ./
 COPY db/ /db/

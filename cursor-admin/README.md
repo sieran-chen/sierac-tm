@@ -70,9 +70,12 @@ nano .env   # 或 vim .env
 
 | 变量 | 说明 | 获取方式 |
 |------|------|----------|
-| `CURSOR_API_TOKEN` | Cursor Admin API 密钥 | cursor.com/dashboard → Settings → Advanced → Admin API Keys |
+| `CURSOR_API_TOKEN` | Cursor Admin API 密钥（**无则管理端无数据**） | [cursor.com/dashboard](https://cursor.com/dashboard) → Settings → Advanced → Admin API Keys；详见 [docs/CURSOR-API-SETUP.md](../docs/CURSOR-API-SETUP.md) |
 | `POSTGRES_PASSWORD` | 数据库密码 | 自定义，强密码 |
 | `INTERNAL_API_KEY` | 管理端与采集服务通信密钥 | 自定义，随机字符串 |
+
+配置好 `CURSOR_API_TOKEN` 后，可用脚本写入服务器并重启采集服务：  
+`CURSOR_API_TOKEN=key_xxx ./configure-cursor-api.sh`
 
 可选项（邮件告警）：
 
@@ -135,6 +138,15 @@ cat backup_20260101.sql | docker compose exec -T db psql -U cursor cursor_admin
 ## 二、客户端 Hook 分发（成员机器）
 
 Hook 为 **Java** 实现（团队统一技术栈），需 **JRE 11+**。部署到每台成员机器的 `~/.cursor/hooks/` 目录，并配置 `~/.cursor/hooks.json`。
+
+### 成员不装 Hook 会怎样？
+
+| 能力 | 数据来源 | 不装 Hook 时 |
+|------|----------|--------------|
+| 用量总览、支出管理、告警（基于用量/支出） | 服务端定时拉取 **Cursor Admin API** | ✅ 正常，全员可见 |
+| 工作目录（按目录的会话数、时长、会话明细） | 仅来自 **Hook 上报** | ❌ 该成员无此数据 |
+
+因此：不装 Hook 只会缺失「工作目录/会话」细粒度数据；用量与支出仍可从 Cursor 官方 API 获得。若希望工作目录数据覆盖全员，建议用 **方式 B（MDM 批量推送）** 统一部署，或通过规范要求成员安装。
 
 ### 构建 JAR（一次性，在任意有 Maven 的机器上）
 

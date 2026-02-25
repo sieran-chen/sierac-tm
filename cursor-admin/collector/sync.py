@@ -3,12 +3,27 @@
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from cursor_api import get_members, get_daily_usage, get_spend
 from database import get_pool
 
 log = logging.getLogger("sync")
+
+
+def _parse_day(value) -> date | None:
+    """将 API 返回的 day（可能是 str/时间戳）转为 date。"""
+    if value is None:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        return datetime.strptime(value[:10], "%Y-%m-%d").date()
+    if isinstance(value, (int, float)):
+        return datetime.utcfromtimestamp(value / 1000.0).date()
+    return None
 
 
 async def sync_members():
@@ -52,6 +67,9 @@ async def sync_daily_usage(days_back: int = 2):
 
         async with pool.acquire() as conn:
             for row in rows:
+                day_val = _parse_day(row.get("day"))
+                if day_val is None:
+                    continue
                 await conn.execute(
                     """
                     INSERT INTO daily_usage (
@@ -78,7 +96,7 @@ async def sync_daily_usage(days_back: int = 2):
                         synced_at            = NOW()
                     """,
                     row.get("email", ""),
-                    row.get("day"),
+                    day_val,
                     row.get("agentRequests", 0),
                     row.get("chatRequests", 0),
                     row.get("composerRequests", 0),

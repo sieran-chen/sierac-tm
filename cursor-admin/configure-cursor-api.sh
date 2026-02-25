@@ -15,15 +15,18 @@ if [ -z "${CURSOR_API_TOKEN}" ]; then
 fi
 
 echo ">>> 在 ${DEPLOY_USER}@${DEPLOY_HOST} 上更新 .env 并重启 collector..."
-ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" "${CURSOR_API_TOKEN}" "${APP_DIR}" << 'REMOTE'
-TOKEN="$1"
-APP_DIR="$2"
+TMPTOK=$(mktemp)
+trap 'rm -f "$TMPTOK"' EXIT
+printf '%s' "${CURSOR_API_TOKEN}" > "$TMPTOK"
+scp -q "$TMPTOK" "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/cursor_api_token.txt"
+ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" "${APP_DIR}" << 'REMOTE'
+APP_DIR="$1"
+TOKEN=$(cat /tmp/cursor_api_token.txt)
+rm -f /tmp/cursor_api_token.txt
 cd "$APP_DIR"
-if grep -q '^CURSOR_API_TOKEN=' .env 2>/dev/null; then
-  sed -i "s|^CURSOR_API_TOKEN=.*|CURSOR_API_TOKEN=${TOKEN}|" .env
-else
-  echo "CURSOR_API_TOKEN=${TOKEN}" >> .env
-fi
+grep -v '^CURSOR_API_TOKEN=' .env > .env.tmp 2>/dev/null || true
+echo "CURSOR_API_TOKEN=${TOKEN}" >> .env.tmp
+mv .env.tmp .env
 docker compose restart collector
 echo "已更新 CURSOR_API_TOKEN 并重启 collector。稍等约 1 分钟后刷新管理端即可看到数据。"
 REMOTE

@@ -1,0 +1,75 @@
+---
+description: 核心原则 — 语言、代码质量、禁止占位与假数据。
+globs:
+  - cursor-admin/**/*.py
+  - cursor-admin/**/*.ts
+  - cursor-admin/**/*.tsx
+alwaysApply: false
+---
+# Sierac-tm 核心原则
+
+> **版本**: v1.0.0 (2026-02-25)
+> **状态**: 核心规范，必须遵守
+
+---
+
+## 一、语言规范
+
+**代码英文，文档中文。**
+
+| 范围 | 语言 | 说明 |
+|------|------|------|
+| cursor-admin/collector/**/*.py — docstring、注释 | **English** | 代码面向协作与开源 |
+| cursor-admin/web/src/** — JSDoc、注释 | **English** | 同上 |
+| cursor-admin/hook/** — 注释 | **English** | 同上 |
+| README、docs/、.kiro/、.cursor/rules/ | **中文** | 目标用户为中文团队 |
+
+---
+
+## 二、代码质量
+
+### 2.1 类型注解
+
+- **Python**：使用现代类型注解（Python 3.10+），如 `list[str]`、`dict[str, int]`。
+- **TypeScript**：严格模式，避免 `any`。
+
+### 2.2 异步与 I/O
+
+- Collector 中与 Cursor API、DB、HTTP 上报相关的路径使用 **async/await**（asyncpg、httpx、FastAPI）。
+
+### 2.3 日志
+
+- 使用标准库 **logging**，每模块 `logger = logging.getLogger(__name__)`。
+- 禁止在生产逻辑中用 `print()` 输出运行信息；使用 `logger.info/warning/error`。
+- 日志消息使用占位符（lazy formatting），如 `logger.info("Synced %d members", count)`。
+
+### 2.4 禁止假数据
+
+- 数据获取失败时返回空结果或明确错误，**严禁**硬编码备用假数据。
+- 测试中如需 mock，显式标注为 mock，不冒充真实数据。
+
+---
+
+## 三、禁止 TODO 占位
+
+**代码中禁止留 TODO/FIXME/HACK/XXX 占位。**
+
+- 未完成功能应记录在 `.kiro/specs/*/tasks.md` 中，不在代码里留「以后再做」。
+- 允许用 `...` 表示抽象接口或占位实现仅限 Phase 0 骨架，且需在 spec 中说明。
+
+---
+
+## 四、关键操作必须校验
+
+- 外部 API 调用、DB 写入、告警发送等应有错误处理与日志。
+- 不静默吞掉异常；记录后可根据策略选择 re-raise 或降级。
+
+---
+
+## 五、变更前检查
+
+修改模块前先确认影响范围（调用方、数据表、API 契约），必要时更新 `docs/ARCHITECTURE.md` 或对应 spec。
+
+---
+
+**执行承诺**：代码英文/文档中文 · 类型与日志规范 · 禁止 TODO 与假数据 · 关键操作必校验

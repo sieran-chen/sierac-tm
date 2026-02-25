@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-cursor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cursor}
+      POSTGRES_DB:       ${POSTGRES_DB:-cursor_admin}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cursor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── 采集服务（Collector）────────────────────────────────────────────────────
+  collector:
+    build:
+      context: .
+      dockerfile: collector/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL:          ${DATABASE_URL:-postgresql+asyncpg://cursor:cursor@db:5432/cursor_admin}
+      CURSOR_API_TOKEN:      ${CURSOR_API_TOKEN}
+      CURSOR_API_URL:        ${CURSOR_API_URL:-https://api.cursor.com}
+      SYNC_INTERVAL_MINUTES: ${SYNC_INTERVAL_MINUTES:-60}
+      INTERNAL_API_KEY:      ${INTERNAL_API_KEY:-change-me-in-production}
+      SMTP_HOST:             ${SMTP_HOST:-}
+      SMTP_PORT:             ${SMTP_PORT:-465}
+      SMTP_USER:             ${SMTP_USER:-}
+      SMTP_PASSWORD:         ${SMTP_PASSWORD:-}
+      SMTP_FROM:             ${SMTP_FROM:-}
+      SMTP_USE_SSL:          ${SMTP_USE_SSL:-true}
+      DEFAULT_WEBHOOK_URL:   ${DEFAULT_WEBHOOK_URL:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/../db:ro   # 挂载迁移文件
+
+  # ─── 管理端 Web ───────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: web
+      dockerfile: Dockerfile
+      args:
+        VITE_API_KEY:  ${INTERNAL_API_KEY:-change-me-in-production}
+        VITE_API_BASE: /api
+    restart: unless-stopped
+    depends_on:
+      - collector
+    ports:
+      - "3000:80"
+
+volumes:
+  pg_data:

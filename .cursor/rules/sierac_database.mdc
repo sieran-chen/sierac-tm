@@ -1,0 +1,46 @@
+---
+description: 数据库规范 — 编写迁移或 collector 中 DB 相关代码时适用。
+globs:
+  - cursor-admin/db/**/*
+  - cursor-admin/collector/**/database*.py
+  - cursor-admin/collector/**/sync.py
+alwaysApply: false
+---
+# Sierac-tm 数据库规范
+
+> **版本**: v1.0.0 (2026-02-25)
+> **架构真源**: `docs/ARCHITECTURE.md`
+
+---
+
+## 一、迁移管理
+
+- 迁移文件位于 `cursor-admin/db/migrations/`，按序号命名：`001_init.sql`、`002_xxx.sql`。
+- 迁移内容**幂等**：使用 `CREATE TABLE IF NOT EXISTS`、`CREATE INDEX IF NOT EXISTS` 等，可重复执行。
+- 启动时由 `collector/database.init_db()` 按序执行，不使用 Alembic。
+
+---
+
+## 二、表设计原则
+
+- **时间字段**：统一 `TIMESTAMPTZ`（或 PostgreSQL `TIMESTAMPTZ`）。
+- **主键**：自增或 UUID 均可，与现有表一致（当前多为 SERIAL 或显式主键）。
+- **未来多租户**：若扩展多团队，业务表需含 `tenant_id`，索引以 `tenant_id` 为前缀。
+
+---
+
+## 三、访问方式
+
+- Collector 使用 **asyncpg** 直连 PostgreSQL，无 ORM。
+- SQL 拼接使用参数化（`$1, $2`），禁止字符串拼接防注入。
+
+---
+
+## 四、参考
+
+- 现有表结构见 `cursor-admin/db/migrations/001_init.sql`。
+- 扩展表（如激励相关）需在对应 spec 的 design.md 中设计并新增迁移文件。
+
+---
+
+**执行承诺**：幂等迁移 · 时间 TIMESTAMPTZ · 参数化 SQL

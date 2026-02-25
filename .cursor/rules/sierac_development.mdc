@@ -1,0 +1,57 @@
+---
+description: 开发规范 — 依赖管理、重构流程、Git、代码风格。
+globs:
+  - cursor-admin/**/*
+  - pyproject.toml
+  - poetry.lock
+alwaysApply: false
+---
+# Sierac-tm 开发规范
+
+> **版本**: v1.0.0 (2026-02-25)
+> **状态**: 核心规范，必须遵守
+
+---
+
+## 一、依赖管理
+
+- **Collector（Python）**：使用 **Poetry** 管理依赖（`cursor-admin/collector/pyproject.toml` + `poetry.lock`）。Python 版本 >= 3.10。本地开发：`poetry install`；测试/格式化：`poetry run pytest`、`poetry run ruff check .`、`poetry run ruff format .`。
+- **Web**：npm/yarn，依赖定义在 `package.json`。
+- **Hook Java**：Maven，`hook/java/pom.xml`。
+
+---
+
+## 二、重构/修改前流程
+
+1. **完整阅读**相关代码与文档（含 `docs/ARCHITECTURE.md`、对应 spec）。
+2. **制定方案**：列出需修改的文件与影响范围，写下来。
+3. **用户确认**后再批量执行。
+4. **验证**：运行测试或手动验收。
+
+---
+
+## 三、完整实现原则
+
+- 不因「数据为空」而跳过展示或逻辑；空数据时返回明确空结果或提示。
+- 不擅自简化或删除已设计功能；与 spec 不一致时先更新 spec 再改代码。
+
+---
+
+## 四、Git 规范
+
+- **提交消息**：`<type>(<scope>): <description>`  
+  type: feat | fix | refactor | test | docs | chore  
+  scope: collector | web | hook | db | specs
+- **最小化提交**：只提交当前任务相关改动。
+
+---
+
+## 五、代码风格
+
+- **Python**：Ruff（lint + format），或 Black + isort；类型检查可选 mypy。
+- **TypeScript/React**：ESLint + Prettier。
+- **命名**：模块/函数 snake_case，类 PascalCase，常量 UPPER_SNAKE_CASE。
+
+---
+
+**执行承诺**：先规划后执行 · 完整实现 · 提交最小化 · 风格一致

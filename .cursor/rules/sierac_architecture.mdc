@@ -1,0 +1,80 @@
+---
+description: 架构规范 — 适用于包结构、集成边界、collector、hook 协议、数据库。
+globs:
+  - cursor-admin/**/*.py
+  - cursor-admin/**/*.ts
+  - cursor-admin/**/*.tsx
+  - docs/**/*.md
+  - .kiro/specs/**/*.md
+alwaysApply: false
+---
+# Sierac-tm 架构规范
+
+> **版本**: v1.0.0 (2026-02-25)
+> **架构真源**: `docs/ARCHITECTURE.md`
+
+---
+
+## 一、包结构
+
+```
+cursor-admin/
+├── collector/           # 采集服务（Python, FastAPI）
+│   ├── main.py          # 入口、API、定时任务
+│   ├── sync.py          # Cursor API 同步
+│   ├── alerts.py        # 告警检测与通知
+│   ├── cursor_api.py    # Cursor API 客户端（唯一出口）
+│   ├── database.py      # 连接与迁移
+│   └── config.py
+├── db/migrations/       # SQL 迁移（幂等）
+├── hook/                # 客户端 Hook（多语言）
+│   ├── java/            # Java 实现（主推）
+│   └── cursor_hook.py   # Python 实现（备选）
+└── web/                 # 管理端（TypeScript, React）
+    └── src/
+```
+
+---
+
+## 二、集成边界
+
+| 能力           | 自建 | 集成           | 隔离位置 |
+|----------------|------|----------------|----------|
+| 采集 API、同步、告警 | ✅   |                | collector/*.py |
+| Cursor API 调用 |      | ✅ Cursor 官方  | **cursor_api.py 唯一** |
+| Hook 协议      | ✅   | Cursor Hooks 约定 | hook/* 多语言 |
+| 管理端         | ✅   |                | web/src |
+| 数据库         | ✅   | PostgreSQL     | db/migrations |
+
+**约束**：
+- 所有对 Cursor Admin/Analytics API 的调用必须经 `cursor_api.py`，不得在其他模块直接请求 Cursor。
+- Hook 与 collector 之间仅通过 HTTP JSON 契约通信（见 `.kiro/specs/cursor-admin-hooks/design.md`）。
+
+---
+
+## 三、Hook 多语言
+
+- **主推**：Java 11+，fat JAR，`~/.cursor/hooks/cursor_hook.jar`。
+- **备选**：Python 3，`~/.cursor/hooks/cursor_hook.py`。
+- 两者行为与协议一致：stdin 一行 JSON，stdout `{"continue":true}`；仅 `beforeSubmitPrompt` 与 `stop` 两类事件；上报字段见 spec。
+
+---
+
+## 四、数据库
+
+- 使用 **PostgreSQL**，迁移为 **SQL 文件幂等执行**（无 Alembic，启动时 `database.init_db()` 按序执行 `db/migrations/*.sql`）。
+- 时间字段统一 **TIMESTAMPTZ**；主键可为自增或 UUID，视表而定。
+- 若未来多租户，表需含 `tenant_id` 且索引以 `tenant_id` 为前缀。
+
+---
+
+## 五、文档引用
+
+| 查什么   | 去哪里 |
+|----------|--------|
+| 架构决策 | `docs/ARCHITECTURE.md` |
+| Spec 设计 | `.kiro/specs/*/design.md` |
+
+---
+
+**执行承诺**：Cursor API 单点出口 · Hook 协议统一 · 文档驱动

@@ -1,0 +1,63 @@
+---
+description: Spec 文档标准总纲 — 创建或评审 spec 时适用。
+globs:
+  - .kiro/**/*.md
+  - .kiro/specs/**/*.md
+alwaysApply: false
+---
+# Sierac-tm Spec 文档标准总纲
+
+> **版本**: v1.0.0 (2026-02-25)
+> **详细规范**: `.kiro/SPEC_DOCUMENTATION_STANDARD.md`
+
+---
+
+## 一、三层文档结构
+
+新功能与重大重构使用三层文档：
+
+```
+.kiro/specs/{feature-name}/
+├── requirements.md    # WHAT — 用户故事与验收标准
+├── design.md          # HOW — 架构、数据模型、API
+└── tasks.md           # WHO/WHEN — 任务清单与验收
+```
+
+---
+
+## 二、适用范围
+
+| 场景         | 是否需要 Spec     |
+|--------------|--------------------|
+| 新功能       | ✅ 必须（三层）    |
+| 重大重构     | ✅ 必须（三层）    |
+| 小功能增强   | 建议（至少 requirements + tasks） |
+| Bug 修复     | 可选               |
+
+---
+
+## 三、创建流程
+
+1. 阅读 `.kiro/SPEC_DOCUMENTATION_STANDARD.md` 第二、三、四章。
+2. 创建目录：`mkdir -p .kiro/specs/{feature-name}`。
+3. 按模板编写 requirements.md → design.md → tasks.md。
+4. 评审通过后实施。
+
+---
+
+## 四、关键原则
+
+1. **凡设计即交付**：写入 tasks.md 的任务视为承诺交付。
+2. **验收可执行**：验收标准尽量可自动化（pytest、curl、脚本）。
+3. **集成点显式写出**：组件间调用在 design/tasks 中写明「何时、何处调用」。
+4. **收口以可执行验收为准**。
+
+---
+
+## 五、文档引用
+
+| 查什么     | 去哪里 |
+|------------|--------|
+| 完整 Spec 规范 | `.kiro/SPEC_DOCUMENTATION_STANDARD.md` |
+| 架构决策   | `docs/ARCHITECTURE.md` |
+| 任务总览   | `.kiro/specs/SPEC_TASKS_SCAN.md` |

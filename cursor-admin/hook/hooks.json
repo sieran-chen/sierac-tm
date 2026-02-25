@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      { "command": "java -jar ~/.cursor/hooks/cursor_hook.jar" }
+    ],
+    "stop": [
+      { "command": "java -jar ~/.cursor/hooks/cursor_hook.jar" }
+    ]
+  }
+}

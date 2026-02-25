@@ -1,0 +1,7 @@
+{
+  "collector_url": "http://YOUR_SERVER_IP:8000",
+  "user_email": "",
+  "machine_id": "",
+  "timeout_seconds": 5,
+  "state_dir": ""
+}

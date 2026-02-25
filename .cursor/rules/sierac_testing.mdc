@@ -1,0 +1,51 @@
+---
+description: 测试规范 — 编写或运行 collector / hook 测试时适用。
+globs:
+  - cursor-admin/collector/**/*.py
+  - cursor-admin/**/test_*.py
+  - tests/**/*.py
+alwaysApply: false
+---
+# Sierac-tm 测试规范
+
+> **版本**: v1.0.0 (2026-02-25)
+
+---
+
+## 一、测试框架
+
+| 工具           | 用途     | 适用 |
+|----------------|----------|------|
+| **pytest**     | 测试框架 | collector |
+| **pytest-asyncio** | 异步测试 | collector 异步逻辑 |
+| **pytest-cov** | 覆盖率   | 可选 |
+
+---
+
+## 二、测试结构建议
+
+```
+cursor-admin/
+├── collector/
+│   ├── ...
+│   └── tests/           # 或项目根 tests/collector/
+│       ├── unit/
+│       └── integration/
+└── hook/
+    └── java/src/test/   # JUnit
+```
+
+- **单元测试**：不依赖真实 Cursor API 与 DB，可用 mock 或内存实现。
+- **集成测试**：需要 DB 时使用 testcontainers 或固定测试 DB；Cursor API 用 mock 或契约测试。
+
+---
+
+## 三、规范
+
+- 异步测试使用 `@pytest.mark.asyncio`。
+- 测试命名：`test_<行为>_<条件>_<预期>`。
+- 关键路径与边界条件需覆盖；禁止用假数据冒充真实场景。
+
+---
+
+**执行承诺**：pytest · 异步标记 · 命名清晰 · 不假数据

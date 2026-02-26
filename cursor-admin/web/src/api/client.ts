@@ -68,6 +68,8 @@ export const api = {
     request<void>(`/projects/${id}`, { method: 'DELETE' }),
   reinjectHook: (id: number) =>
     request<{ ok: boolean; message?: string }>(`/projects/${id}/reinject-hook`, { method: 'POST' }),
+  projectSummary: (id: number) =>
+    request<ProjectSummary>(`/projects/${id}/summary`),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -107,6 +109,21 @@ export interface ProjectUpdate {
   workspace_rules?: string[]
   member_emails?: string[]
   status?: string
+}
+
+export interface ProjectSummary {
+  project: Project
+  session_count: number
+  total_duration_seconds: number
+  participants: { user_email: string; session_count: number; total_seconds: number }[]
+  contributions: {
+    author_email: string
+    commit_date: string
+    commit_count: number
+    lines_added: number
+    lines_removed: number
+    files_changed: number
+  }[]
 }
 
 export interface Member {

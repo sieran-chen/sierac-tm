@@ -45,7 +45,7 @@
 - [ ] **Task 11**：Collector 新增 Git 采集定时任务（clone/fetch → git log → git diff → upsert git_contributions）
 - [x] **Task 12**：Collector 新增 `/api/projects/{id}/contributions` 查询 API
 - [x] **Task 13**：Collector 新增 `/api/projects/{id}/summary` 汇总 API（成本 + 贡献 + 参与人）
-- [ ] **Task 14**：管理端新增「项目详情」页面（成本面板、贡献面板、参与面板）
+- [x] **Task 14**：管理端新增「项目详情」页面（成本面板、贡献面板、参与面板）
 
 ## Phase 0-D：成员端与收尾
 

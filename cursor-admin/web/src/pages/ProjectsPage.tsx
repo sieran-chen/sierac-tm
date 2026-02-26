@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, Archive, Edit2, Check, X, Copy, RefreshCw } from 'lucide-react'
 import { api, Project, ProjectCreate, ProjectUpdate } from '../api/client'
 
@@ -155,7 +156,11 @@ export default function ProjectsPage() {
           <tbody className="divide-y divide-gray-100">
             {list.map((p) => (
               <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-5 py-2.5 font-medium">{p.name}</td>
+                <td className="px-5 py-2.5 font-medium">
+                  <Link to={`/projects/${p.id}`} className="text-brand-600 hover:underline">
+                    {p.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-2.5 text-gray-600 max-w-[200px] truncate" title={p.description}>
                   {p.description || '—'}
                 </td>

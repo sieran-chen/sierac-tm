@@ -43,7 +43,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
-| cursor-admin-projects | 2026-02-26 | 27 | 26（C1–C5 + Task 1–10 + Task 12–16 + Task 19–27） | 0 | 3（Task 11/17/18） | 无 |
+| cursor-admin-projects | 2026-02-26 | 27 | 27（C1–C5 + Task 1–10 + Task 12–17 + Task 19–27） | 0 | 2（Task 11/18） | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 0 | 0 | 15 | 依赖 projects |
 
 ### cursor-admin-projects 当前进度明细
@@ -54,12 +54,11 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 - Phase 0-B（Hook 白名单校验）：Task 7、8、9、10 已完成（Python 实现 + 服务端补填）
 - Phase 0-C：Task 12–14 已完成（contributions/summary API、项目详情页）
 - Phase 0-D：Task 15（/api/contributions/my）、Task 16（我的项目视图）已完成
-- Phase 0-E：Task 19–27 已完成（含 E2E 验证清单 `E2E_VERIFICATION.md`）
+- Phase 0-E：Task 17（工作目录页改造为按项目聚合）、Task 19–27 已完成（含 E2E 验证清单 `E2E_VERIFICATION.md`）
 
 **下一批次（建议优先级）**：
 1. Task 11：Git 采集定时任务
-2. Task 17：工作目录页改造为按项目聚合
-3. Task 18：端到端验证（立项 → Hook → 上报 → Git 采集 → 管理端展示）
+2. Task 18：端到端验证（立项 → Hook → 上报 → Git 采集 → 管理端展示）
 
 ---
 

@@ -44,6 +44,12 @@ export const api = {
     if (params.end)   q.set('end', params.end)
     return request<SessionSummary[]>(`/sessions/summary?${q}`)
   },
+  sessionsSummaryByProject: (params: { start?: string; end?: string }) => {
+    const q = new URLSearchParams()
+    if (params.start) q.set('start', params.start)
+    if (params.end) q.set('end', params.end)
+    return request<SessionSummaryByProjectRow[]>(`/sessions/summary-by-project?${q}`)
+  },
 
   alertRules: () => request<AlertRule[]>('/alerts/rules'),
   createAlertRule: (body: Omit<AlertRule, 'id' | 'created_at'>) =>
@@ -184,6 +190,16 @@ export interface SessionSummary {
   last_seen: string
 }
 
+export interface SessionSummaryByProjectRow {
+  project_id: number | null
+  project_name: string
+  user_email: string
+  session_count: number
+  total_seconds: number
+  first_seen: string | null
+  last_seen: string | null
+}
+
 export interface SessionsResponse {
   total: number
   page: number
@@ -197,6 +213,7 @@ export interface SessionRow {
   user_email: string
   primary_workspace: string | null
   workspace_roots: string[]
+  project_id: number | null
   started_at: string | null
   ended_at: string
   duration_seconds: number | null

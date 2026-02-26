@@ -29,49 +29,68 @@ export default function ProjectsPage() {
   const [form, setForm] = useState<FormState>(null)
   const [createdProject, setCreatedProject] = useState<Project | null>(null)
   const [reinjecting, setReinjecting] = useState<number | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const load = () =>
     api.projects(statusFilter ? { status: statusFilter } : undefined).then(setList)
   useEffect(() => {
     load()
   }, [statusFilter])
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const save = async () => {
     if (!form) return
+    setFormError(null)
     const _wr = (form as FormState & { _wr?: string })._wr ?? linesToText(form.workspace_rules)
     const _me = (form as FormState & { _me?: string })._me ?? linesToText(form.member_emails ?? [])
-    if (form.id) {
-      const payload: ProjectUpdate = {
-        name: form.name,
-        description: form.description ?? '',
-        workspace_rules: textToLines(_wr),
-        member_emails: textToLines(_me),
+    const _gitRepos = (form as FormState & { _gitRepos?: string })._gitRepos ?? linesToText(form.git_repos ?? [])
+    const gitReposList = textToLines(_gitRepos)
+    try {
+      if (form.id) {
+        const payload: ProjectUpdate = {
+          name: form.name,
+          description: form.description ?? '',
+          workspace_rules: textToLines(_wr),
+          member_emails: textToLines(_me),
+          git_repos: gitReposList,
+        }
+        const status = (form as Project).status
+        if (status) payload.status = status
+        await api.updateProject(form.id, payload)
+        setToast({ message: '项目已保存', type: 'success' })
+      } else {
+        const createMode = (form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual'
+        const slug = (form as FormState & { _repoSlug?: string })._repoSlug ?? ''
+        const isAuto = createMode === 'auto_gitlab' || createMode === 'auto_github'
+        const res = await api.createProject({
+          name: form.name,
+          description: form.description ?? '',
+          workspace_rules: textToLines(_wr),
+          member_emails: textToLines(_me),
+          created_by: form.created_by,
+          git_repos: createMode === 'manual' ? gitReposList : undefined,
+          auto_create_repo: isAuto,
+          repo_slug: isAuto ? slug || undefined : undefined,
+          repo_provider: createMode === 'auto_github' ? 'github' : createMode === 'auto_gitlab' ? 'gitlab' : undefined,
+        })
+        if (res.repo_url || res.repo_ssh_url) {
+          setCreatedProject(res)
+          return
+        }
+        setToast({ message: '项目已创建。若未看到新项目，请点击刷新。', type: 'success' })
       }
-      const status = (form as Project).status
-      if (status) payload.status = status
-      await api.updateProject(form.id, payload)
-    } else {
-      const createMode = (form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual'
-      const slug = (form as FormState & { _repoSlug?: string })._repoSlug ?? ''
-      const isAuto = createMode === 'auto_gitlab' || createMode === 'auto_github'
-      const res = await api.createProject({
-        name: form.name,
-        description: form.description ?? '',
-        workspace_rules: textToLines(_wr),
-        member_emails: textToLines(_me),
-        created_by: form.created_by,
-        auto_create_repo: isAuto,
-        repo_slug: isAuto ? slug || undefined : undefined,
-        repo_provider: createMode === 'auto_github' ? 'github' : createMode === 'auto_gitlab' ? 'gitlab' : undefined,
-      })
-      if (res.repo_url || res.repo_ssh_url) {
-        setCreatedProject(res)
-        return
-      }
+      setForm(null)
+      setCreatedProject(null)
+      load()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '保存失败，请重试'
+      setFormError(msg)
     }
-    setForm(null)
-    setCreatedProject(null)
-    load()
   }
 
   const archive = async (id: number) => {
@@ -81,6 +100,7 @@ export default function ProjectsPage() {
   }
 
   const openCreate = () => {
+    setFormError(null)
     setCreatedProject(null)
     setForm({
       name: '',
@@ -88,14 +108,17 @@ export default function ProjectsPage() {
       workspace_rules: [],
       member_emails: [],
       created_by: '',
+      git_repos: [],
       _wr: '',
       _me: '',
+      _gitRepos: '',
       _createRepoMode: 'manual',
       _repoSlug: '',
-    } as FormState & { _wr: string; _me: string; _createRepoMode: string; _repoSlug: string })
+    } as FormState & { _wr: string; _me: string; _gitRepos: string; _createRepoMode: string; _repoSlug: string })
   }
 
   const closeModal = () => {
+    setFormError(null)
     setForm(null)
     setCreatedProject(null)
     load()
@@ -111,24 +134,47 @@ export default function ProjectsPage() {
     }
   }
   const openEdit = (p: Project) => {
+    setFormError(null)
     setForm({
       ...p,
       _wr: linesToText(p.workspace_rules),
       _me: linesToText(p.member_emails ?? []),
-    } as FormState & { _wr: string; _me: string })
+      _gitRepos: linesToText(p.git_repos ?? []),
+    } as FormState & { _wr: string; _me: string; _gitRepos: string })
   }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">项目管理</h1>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600"
-        >
-          <Plus size={15} /> 新建项目
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => load()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+            title="刷新列表"
+          >
+            <RefreshCw size={14} /> 刷新
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600"
+          >
+            <Plus size={15} /> 新建项目
+          </button>
+        </div>
       </div>
+
+      {toast && (
+        <div
+          className={`rounded-lg px-4 py-2 text-sm ${
+            toast.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+          role="alert"
+        >
+          {toast.message}
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <span className="text-sm text-gray-500">状态</span>
@@ -333,6 +379,18 @@ export default function ProjectsPage() {
                       placeholder="可选"
                     />
                   </div>
+                  {form.id && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">仓库地址（一行一个，用于 Git 采集与贡献统计）</label>
+                      <textarea
+                        value={(form as FormState & { _gitRepos?: string })._gitRepos ?? linesToText(form.git_repos ?? [])}
+                        onChange={(e) => setForm({ ...form, _gitRepos: e.target.value } as FormState)}
+                        rows={2}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono"
+                        placeholder="https://github.com/org/repo.git"
+                      />
+                    </div>
+                  )}
                   {!form.id && (
                 <>
                   <div>
@@ -366,6 +424,24 @@ export default function ProjectsPage() {
                         <span className="text-sm">自动创建（GitHub）</span>
                       </label>
                     </div>
+                    {((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'manual' && (
+                      <>
+                        <p className="text-xs text-gray-500 mt-2">
+                          保存后，在工作目录符合规则的 Cursor 会话将自动归属到本项目。成员需在对应目录下使用 Cursor，会话才会被计入。
+                        </p>
+                        <div className="mt-3">
+                          <label className="block text-xs text-gray-500 mb-1">已有仓库地址 *（一行一个，用于 Git 采集与贡献统计）</label>
+                          <textarea
+                            value={(form as FormState & { _gitRepos?: string })._gitRepos ?? ''}
+                            onChange={(e) => setForm({ ...form, _gitRepos: e.target.value } as FormState)}
+                            rows={2}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono"
+                            placeholder={'https://github.com/org/repo.git\n或 git@github.com:org/repo.git'}
+                          />
+                          <p className="text-xs text-gray-400 mt-1">填写后，采集服务会定时拉取该仓库的 commit 并计入贡献；不填则无 Git 相关数据。</p>
+                        </div>
+                      </>
+                    )}
                   </div>
                   {(((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_gitlab' || ((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_github') && (
                     <div>
@@ -404,6 +480,12 @@ export default function ProjectsPage() {
               )}
             </div>
 
+            {formError && (
+              <div className="rounded-lg px-3 py-2 text-sm bg-red-50 text-red-700 border border-red-200" role="alert">
+                {formError}
+              </div>
+            )}
+
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={closeModal}
@@ -417,8 +499,9 @@ export default function ProjectsPage() {
                   const mode = (form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual'
                   const slug = (form as FormState & { _repoSlug?: string })._repoSlug ?? ''
                   const wr = (form as FormState & { _wr?: string })._wr ?? ''
+                  const gitRepos = (form as FormState & { _gitRepos?: string })._gitRepos ?? ''
                   const isAuto = mode === 'auto_gitlab' || mode === 'auto_github'
-                  return !form.name.trim() || !wr.trim() || (!form.id && !form.created_by?.trim()) || (!form.id && isAuto && !slug.trim())
+                  return !form.name.trim() || !wr.trim() || (!form.id && !form.created_by?.trim()) || (!form.id && isAuto && !slug.trim()) || (!form.id && mode === 'manual' && !gitRepos.trim())
                 })()}
                 className="flex items-center gap-2 px-4 py-2 text-sm bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none"
               >

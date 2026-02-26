@@ -35,5 +35,12 @@ class Settings(BaseSettings):
     # 内部 API 密钥（管理端调用采集服务时校验）
     internal_api_key: str = "change-me-in-production"
 
+    # GitLab（立项时自动创建仓库、注入 Hook；不配置则仅支持手动关联已有仓库）
+    gitlab_url: str = ""
+    gitlab_token: str = ""
+    gitlab_group_id: int = 0
+    gitlab_default_branch: str = "main"
+    gitlab_visibility: str = "private"
+
 
 settings = Settings()

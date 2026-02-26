@@ -56,11 +56,11 @@
 
 ## Phase 0-E：GitLab 仓库自动化
 
-- [ ] **Task 19**：新增 `.env` 配置项（GITLAB_URL / GITLAB_TOKEN / GITLAB_GROUP_ID / GITLAB_DEFAULT_BRANCH / GITLAB_VISIBILITY）及 `config.py` 对应字段
+- [x] **Task 19**：新增 `.env` 配置项（GITLAB_URL / GITLAB_TOKEN / GITLAB_GROUP_ID / GITLAB_DEFAULT_BRANCH / GITLAB_VISIBILITY）及 `config.py` 对应字段
 - [x] **Task 20**：新增 `collector/gitlab_client.py`（GitLab API 封装：创建仓库、推送初始化提交、管理成员、注入 Hook）
 - [x] **Task 21**：新增 `collector/hook_templates/` 目录（hooks.json、cursor_hook.py、hook_config.json.tmpl、gitignore.tmpl）
-- [ ] **Task 22**：扩展 `002_projects.sql`（projects 表增加 gitlab_project_id、repo_url、repo_ssh_url、hook_initialized 字段）
-- [ ] **Task 23**：修改 `POST /api/projects`（auto_create_repo 参数 → 调用 gitlab_client → 回填字段）
+- [x] **Task 22**：扩展 `002_projects.sql`（projects 表增加 gitlab_project_id、repo_url、repo_ssh_url、hook_initialized 字段）（已在 002 中一并创建）
+- [x] **Task 23**：修改 `POST /api/projects`（auto_create_repo 参数 → 调用 gitlab_client → 回填字段）
 - [ ] **Task 24**：新增 `POST /api/projects/{id}/reinject-hook` API（向已有仓库重新注入 Hook 文件）
 - [ ] **Task 25**：管理端「新建项目」弹窗增加仓库创建方式选择（自动创建 / 关联已有）、仓库 slug 输入、结果展示（clone 地址一键复制）
 - [ ] **Task 26**：管理端项目列表增加仓库状态列（已创建 / 未创建 / 创建失败）和「重试」按钮

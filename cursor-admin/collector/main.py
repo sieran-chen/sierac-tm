@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from datetime import date, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -399,8 +399,10 @@ async def list_projects(status: str | None = Query(None)):
 
 
 @app.post("/api/projects", dependencies=[Depends(require_api_key)])
-async def create_project(body: ProjectCreate):
-    """Create project. GitLab auto-create is Task 23; for now only manual git_repos."""
+async def create_project(request: Request, body: ProjectCreate):
+    """Create project. If auto_create_repo=true and repo_slug set, create GitLab repo and inject Hook."""
+    from gitlab_client import GitLabError, gitlab_client
+
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -415,6 +417,46 @@ async def create_project(body: ProjectCreate):
             body.member_emails,
             body.created_by,
         )
+    project_id = row["id"]
+
+    if body.auto_create_repo and body.repo_slug and gitlab_client.is_configured():
+        collector_url = str(request.base_url).rstrip("/")
+        try:
+            gl = gitlab_client.create_project(
+                name=body.name,
+                path_slug=body.repo_slug,
+                description=body.description or "",
+            )
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE projects SET gitlab_project_id=$1, repo_url=$2, repo_ssh_url=$3,
+                        git_repos=$4, updated_at=NOW()
+                    WHERE id=$5
+                    """,
+                    gl.gitlab_project_id,
+                    gl.repo_url,
+                    gl.repo_ssh_url,
+                    [gl.repo_url],
+                    project_id,
+                )
+            gitlab_client.push_initial_commit(
+                gl.gitlab_project_id,
+                collector_url=collector_url,
+                project_id=project_id,
+            )
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                    project_id,
+                )
+            if body.member_emails:
+                gitlab_client.add_members(gl.gitlab_project_id, body.member_emails)
+        except GitLabError as exc:
+            log.warning("GitLab repo create failed for project %s: %s", project_id, exc)
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
     return dict(row)
 
 

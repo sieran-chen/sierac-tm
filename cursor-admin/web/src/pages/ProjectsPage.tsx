@@ -290,46 +290,47 @@ export default function ProjectsPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">项目名称 *</label>
-                <input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                  placeholder="如 Sierac-tm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">描述</label>
-                <input
-                  value={form.description ?? ''}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                  placeholder="简要说明"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">工作目录规则 *（一行一条路径前缀）</label>
-                <textarea
-                  value={(form as FormState & { _wr?: string })._wr ?? linesToText(form.workspace_rules)}
-                  onChange={(e) => setForm({ ...form, _wr: e.target.value } as FormState)}
-                  rows={3}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono"
-                  placeholder={'D:\\AI\\Sierac-tm\n/home/dev/sierac-tm'}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">参与成员邮箱（一行一个，留空表示全员）</label>
-                <textarea
-                  value={(form as FormState & { _me?: string })._me ?? linesToText(form.member_emails ?? [])}
-                  onChange={(e) => setForm({ ...form, _me: e.target.value } as FormState)}
-                  rows={2}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
-                  placeholder="可选"
-                />
-              </div>
-              {!form.id && (
+              <>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">项目名称 *</label>
+                    <input
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                      placeholder="如 Sierac-tm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">描述</label>
+                    <input
+                      value={form.description ?? ''}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                      placeholder="简要说明"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">工作目录规则 *（一行一条路径前缀）</label>
+                    <textarea
+                      value={(form as FormState & { _wr?: string })._wr ?? linesToText(form.workspace_rules)}
+                      onChange={(e) => setForm({ ...form, _wr: e.target.value } as FormState)}
+                      rows={3}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-mono"
+                      placeholder={'D:\\AI\\Sierac-tm\n/home/dev/sierac-tm'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">参与成员邮箱（一行一个，留空表示全员）</label>
+                    <textarea
+                      value={(form as FormState & { _me?: string })._me ?? linesToText(form.member_emails ?? [])}
+                      onChange={(e) => setForm({ ...form, _me: e.target.value } as FormState)}
+                      rows={2}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                      placeholder="可选"
+                    />
+                  </div>
+                  {!form.id && (
                 <>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">仓库创建方式</label>
@@ -413,6 +414,7 @@ export default function ProjectsPage() {
                 <Check size={14} /> 保存
               </button>
             </div>
+                </>
             )}
           </div>
         </div>

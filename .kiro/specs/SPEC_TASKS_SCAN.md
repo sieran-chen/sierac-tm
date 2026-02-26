@@ -43,7 +43,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
-| cursor-admin-projects | 2026-02-26 | 27 | 19（C1–C5 + Task 1–6 + Task 7–10 + Task 19–24 + Task 20–21） | 0 | 8 | 无 |
+| cursor-admin-projects | 2026-02-26 | 27 | 21（C1–C5 + Task 1–6 + Task 7–10 + Task 19–26 + Task 20–21） | 0 | 6 | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 0 | 0 | 15 | 依赖 projects |
 
 ### cursor-admin-projects 当前进度明细
@@ -52,10 +52,10 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 - Phase -1（遗留清理）：C1–C5 全部完成
 - Phase 0-A（数据模型与 CRUD）：Task 1–6 已完成（迁移、CRUD API、白名单、管理端页面、API client、导航）
 - Phase 0-B（Hook 白名单校验）：Task 7、8、9、10 已完成（Python 实现 + 服务端补填）
-- Phase 0-E（GitLab 自动化）：Task 19–24 已完成（config、gitlab_client、hook_templates、POST 立项、reinject-hook API）
+- Phase 0-E（GitLab 自动化）：Task 19–26 已完成（config、POST 立项、reinject-hook、管理端仓库方式/slug/结果展示、仓库状态列与重试）
 
 **下一批次（建议优先级）**：
-1. Task 25–27：管理端仓库创建 UI（slug、clone 地址）、仓库状态列与重试、端到端验证
+1. Task 27：端到端验证（立项 → GitLab 创建 → Hook 注入 → clone → 上报归属）
 2. Task 11–14：Git 采集、项目贡献/汇总 API、项目详情页
 
 ---

@@ -66,6 +66,8 @@ export const api = {
     request<Project>(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   archiveProject: (id: number) =>
     request<void>(`/projects/${id}`, { method: 'DELETE' }),
+  reinjectHook: (id: number) =>
+    request<{ ok: boolean; message?: string }>(`/projects/${id}/reinject-hook`, { method: 'POST' }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────

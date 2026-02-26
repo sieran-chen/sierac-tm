@@ -62,8 +62,8 @@
 - [x] **Task 22**：扩展 `002_projects.sql`（projects 表增加 gitlab_project_id、repo_url、repo_ssh_url、hook_initialized 字段）（已在 002 中一并创建）
 - [x] **Task 23**：修改 `POST /api/projects`（auto_create_repo 参数 → 调用 gitlab_client → 回填字段）
 - [x] **Task 24**：新增 `POST /api/projects/{id}/reinject-hook` API（向已有仓库重新注入 Hook 文件）
-- [ ] **Task 25**：管理端「新建项目」弹窗增加仓库创建方式选择（自动创建 / 关联已有）、仓库 slug 输入、结果展示（clone 地址一键复制）
-- [ ] **Task 26**：管理端项目列表增加仓库状态列（已创建 / 未创建 / 创建失败）和「重试」按钮
+- [x] **Task 25**：管理端「新建项目」弹窗增加仓库创建方式选择（自动创建 / 关联已有）、仓库 slug 输入、结果展示（clone 地址一键复制）
+- [x] **Task 26**：管理端项目列表增加仓库状态列（已创建 / 未创建 / 创建失败）和「重试」按钮
 - [ ] **Task 27**：端到端验证：立项 → GitLab 仓库创建 → Hook 注入 → 成员 clone → Hook 生效 → 上报归属
 
 ---

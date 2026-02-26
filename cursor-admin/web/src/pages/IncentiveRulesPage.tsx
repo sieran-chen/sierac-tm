@@ -16,7 +16,7 @@ export default function IncentiveRulesPage() {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editWeights, setEditWeights] = useState<Record<string, number>>({})
-  const [editCaps, setEditCaps] = useState<Record<string, number>>({})
+  const [editCaps, setEditCaps] = useState<Record<string, number | undefined>>({})
   const [recalculatingId, setRecalculatingId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function IncentiveRulesPage() {
     setError(null)
     try {
       const capsFiltered = Object.fromEntries(
-        Object.entries(editCaps).filter(([, v]) => v != null && v !== '')
+        Object.entries(editCaps).filter(([, v]) => v != null && typeof v === 'number')
       ) as Record<string, number>
       const body: IncentiveRuleUpdate = { weights: editWeights, caps: Object.keys(capsFiltered).length ? capsFiltered : {} }
       await api.updateIncentiveRule(editingId, body)

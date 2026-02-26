@@ -51,7 +51,7 @@ export default function MyProjectsPage() {
     }
     setLoading(true)
     api.myContributions({ email: email.trim() })
-      .then(setRows)
+      .then((res) => setRows(Array.isArray(res) ? res : []))
       .finally(() => setLoading(false))
   }, [email])
 

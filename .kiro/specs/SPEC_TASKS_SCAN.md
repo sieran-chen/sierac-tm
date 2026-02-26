@@ -12,7 +12,7 @@
 | **cursor-admin-core** | ✅ | ✅ | ✅ | 已完成 | `.kiro/specs/cursor-admin-core/` |
 | **cursor-admin-hooks** | ✅ | ✅ | ✅ | Phase 1–2 已完成；Phase 3 Python 已完成，Java 待更新 | `.kiro/specs/cursor-admin-hooks/` |
 | **cursor-admin-projects** | ✅ | ✅ | ✅ | **已完成（Phase 0）** | `.kiro/specs/cursor-admin-projects/` |
-| **cursor-admin-incentives** | ✅ | ✅ | ✅ | 实施中（Phase 1 已完成） | `.kiro/specs/cursor-admin-incentives/` |
+| **cursor-admin-incentives** | ✅ | ✅ | ✅ | **已完成** | `.kiro/specs/cursor-admin-incentives/` |
 
 ---
 
@@ -44,7 +44,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
 | cursor-admin-projects | 2026-02-26 | 27 | 27（全部完成） | 0 | 0 | 无 |
-| cursor-admin-incentives | 2026-02-26 | 15 | 11 | 0 | 4 | 无 |
+| cursor-admin-incentives | 2026-02-26 | 15 | 15（全部完成） | 0 | 0 | 无 |
 
 ### cursor-admin-projects 当前进度明细
 
@@ -59,7 +59,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 
 **cursor-admin-projects 已全部完成。**
 
-**cursor-admin-incentives**：Phase 1–3 已完成（Task 1–11）；下一批次 Task 12–15（成员端我的贡献页、E2E、文档）。
+**cursor-admin-incentives**：已全部完成（Task 1–15，含成员端我的贡献页、E2E 验证清单、ARCHITECTURE §5.5）。
 
 ---
 

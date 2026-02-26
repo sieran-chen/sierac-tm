@@ -70,6 +70,13 @@ export const api = {
     request<{ ok: boolean; message?: string }>(`/projects/${id}/reinject-hook`, { method: 'POST' }),
   projectSummary: (id: number) =>
     request<ProjectSummary>(`/projects/${id}/summary`),
+  myContributions: (params: { email: string; start?: string; end?: string }) => {
+    const q = new URLSearchParams()
+    q.set('email', params.email)
+    if (params.start) q.set('start', params.start)
+    if (params.end) q.set('end', params.end)
+    return request<MyContributionRow[]>(`/contributions/my?${q}`)
+  },
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -124,6 +131,16 @@ export interface ProjectSummary {
     lines_removed: number
     files_changed: number
   }[]
+}
+
+export interface MyContributionRow {
+  project_id: number
+  project_name: string
+  commit_date: string
+  commit_count: number
+  lines_added: number
+  lines_removed: number
+  files_changed: number
 }
 
 export interface Member {

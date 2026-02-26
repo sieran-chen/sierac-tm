@@ -290,7 +290,7 @@ export default function ProjectsPage() {
                 </div>
               </div>
             ) : (
-            <div className="space-y-4">
+              <div className="space-y-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1">项目名称 *</label>
                 <input

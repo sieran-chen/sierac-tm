@@ -806,8 +806,75 @@ async def get_my_contributions(
     email: str = Query(..., description="Current user email"),
     start: str | None = Query(None),
     end: str | None = Query(None),
+    period_type: str | None = Query(None, description="weekly | monthly; with period_key returns score view"),
+    period_key: str | None = Query(None, description="e.g. 2026-W08 or 2026-02"),
 ):
-    """Contributions for the given user across all active projects (member-facing)."""
+    """
+    Member-facing contributions. With period_type+period_key: score, rank, breakdown, projects.
+    Without: raw git contributions list (optional start/end).
+    """
+    if period_type and period_key:
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            agg = await conn.fetchrow(
+                """
+                SELECT hook_adopted, total_score, rank, score_breakdown,
+                       lines_added, lines_removed, commit_count, files_changed,
+                       session_duration_hours, agent_requests
+                FROM contribution_scores
+                WHERE user_email = $1 AND project_id IS NULL AND period_type = $2 AND period_key = $3
+                """,
+                email,
+                period_type,
+                period_key,
+            )
+            proj_rows = await conn.fetch(
+                """
+                SELECT c.project_id, p.name AS project_name, c.total_score
+                FROM contribution_scores c
+                JOIN projects p ON p.id = c.project_id
+                WHERE c.user_email = $1 AND c.period_type = $2 AND c.period_key = $3 AND c.project_id IS NOT NULL
+                ORDER BY c.total_score DESC
+                """,
+                email,
+                period_type,
+                period_key,
+            )
+        if not agg:
+            return {
+                "user_email": email,
+                "period_type": period_type,
+                "period_key": period_key,
+                "hook_adopted": False,
+                "total_score": 0,
+                "rank": None,
+                "score_breakdown": {},
+                "raw": {"lines_added": 0, "commit_count": 0, "session_duration_hours": 0, "agent_requests": 0, "files_changed": 0},
+                "projects": [],
+            }
+        raw = dict(agg)
+        score_breakdown = dict(agg["score_breakdown"] or {})
+        return {
+            "user_email": email,
+            "period_type": period_type,
+            "period_key": period_key,
+            "hook_adopted": bool(agg["hook_adopted"]),
+            "total_score": float(agg["total_score"]),
+            "rank": agg["rank"],
+            "score_breakdown": {k: float(v) for k, v in score_breakdown.items()},
+            "raw": {
+                "lines_added": raw.get("lines_added", 0),
+                "commit_count": raw.get("commit_count", 0),
+                "session_duration_hours": float(raw.get("session_duration_hours") or 0),
+                "agent_requests": raw.get("agent_requests", 0),
+                "files_changed": raw.get("files_changed", 0),
+            },
+            "projects": [
+                {"project_id": r["project_id"], "project_name": r["project_name"], "total_score": float(r["total_score"])}
+                for r in proj_rows
+            ],
+        }
+
     pool = await get_pool()
     conditions = ["g.author_email = $1", "p.status = 'active'"]
     params: list = [email]
@@ -845,6 +912,251 @@ async def get_my_contributions(
         }
         for r in rows
     ]
+
+
+# ─── 排行榜 ────────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/contributions/leaderboard", dependencies=[Depends(require_api_key)])
+async def get_leaderboard(
+    period_type: str = Query(..., description="weekly | monthly"),
+    period_key: str = Query(..., description="e.g. 2026-W08"),
+    hook_only: bool = Query(True, description="Only include hook_adopted=true"),
+):
+    """Leaderboard for the given period. hook_only=true (default) filters to members with Hook data."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        if hook_only:
+            rows = await conn.fetch(
+                """
+                SELECT user_email, rank, total_score, hook_adopted,
+                       lines_added, commit_count, session_duration_hours, agent_requests, files_changed
+                FROM contribution_scores
+                WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL AND hook_adopted = TRUE
+                ORDER BY rank ASC NULLS LAST, total_score DESC
+                """,
+                period_type,
+                period_key,
+            )
+        else:
+            rows = await conn.fetch(
+                """
+                SELECT user_email, rank, total_score, hook_adopted,
+                       lines_added, commit_count, session_duration_hours, agent_requests, files_changed
+                FROM contribution_scores
+                WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL
+                ORDER BY rank ASC NULLS LAST, total_score DESC
+                """,
+                period_type,
+                period_key,
+            )
+        snapshot = await conn.fetchrow(
+            "SELECT created_at FROM leaderboard_snapshots WHERE period_type = $1 AND period_key = $2",
+            period_type,
+            period_key,
+        )
+    generated_at = snapshot["created_at"].isoformat() if snapshot and snapshot.get("created_at") else None
+    return {
+        "period_type": period_type,
+        "period_key": period_key,
+        "generated_at": generated_at,
+        "entries": [
+            {
+                "rank": r["rank"],
+                "user_email": r["user_email"],
+                "total_score": float(r["total_score"]),
+                "hook_adopted": bool(r["hook_adopted"]),
+                "lines_added": r["lines_added"],
+                "commit_count": r["commit_count"],
+            }
+            for r in rows
+        ],
+    }
+
+
+# ─── 激励规则 CRUD ─────────────────────────────────────────────────────────────
+
+
+class IncentiveRuleCreate(BaseModel):
+    name: str
+    period_type: str = "weekly"
+    weights: dict
+    caps: dict = {}
+    enabled: bool = True
+
+
+class IncentiveRuleUpdate(BaseModel):
+    name: str | None = None
+    period_type: str | None = None
+    weights: dict | None = None
+    caps: dict | None = None
+    enabled: bool | None = None
+
+
+@app.get("/api/incentive-rules", dependencies=[Depends(require_api_key)])
+async def list_incentive_rules(enabled_only: bool = Query(False)):
+    """List incentive rules. enabled_only=true returns only enabled rules."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        if enabled_only:
+            rows = await conn.fetch(
+                "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules WHERE enabled = TRUE ORDER BY id"
+            )
+        else:
+            rows = await conn.fetch(
+                "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules ORDER BY id"
+            )
+    return [
+        {
+            "id": r["id"],
+            "name": r["name"],
+            "period_type": r["period_type"],
+            "weights": dict(r["weights"] or {}),
+            "caps": dict(r["caps"] or {}),
+            "enabled": r["enabled"],
+            "created_at": r["created_at"].isoformat() if r.get("created_at") else None,
+            "updated_at": r["updated_at"].isoformat() if r.get("updated_at") else None,
+        }
+        for r in rows
+    ]
+
+
+@app.post("/api/incentive-rules", dependencies=[Depends(require_api_key)], status_code=201)
+async def create_incentive_rule(body: IncentiveRuleCreate):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO incentive_rules (name, period_type, weights, caps, enabled)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, name, period_type, weights, caps, enabled, created_at, updated_at
+            """,
+            body.name,
+            body.period_type,
+            body.weights,
+            body.caps,
+            body.enabled,
+        )
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "period_type": row["period_type"],
+        "weights": dict(row["weights"] or {}),
+        "caps": dict(row["caps"] or {}),
+        "enabled": row["enabled"],
+        "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
+        "updated_at": row["updated_at"].isoformat() if row.get("updated_at") else None,
+    }
+
+
+@app.get("/api/incentive-rules/{rule_id}", dependencies=[Depends(require_api_key)])
+async def get_incentive_rule(rule_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules WHERE id = $1",
+            rule_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Incentive rule not found")
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "period_type": row["period_type"],
+        "weights": dict(row["weights"] or {}),
+        "caps": dict(row["caps"] or {}),
+        "enabled": row["enabled"],
+        "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
+        "updated_at": row["updated_at"].isoformat() if row.get("updated_at") else None,
+    }
+
+
+@app.put("/api/incentive-rules/{rule_id}", dependencies=[Depends(require_api_key)])
+async def update_incentive_rule(rule_id: int, body: IncentiveRuleUpdate):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT id, name, period_type, weights, caps, enabled FROM incentive_rules WHERE id = $1", rule_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Incentive rule not found")
+        updates = []
+        params = []
+        idx = 1
+        if body.name is not None:
+            updates.append(f"name = ${idx}")
+            params.append(body.name)
+            idx += 1
+        if body.period_type is not None:
+            updates.append(f"period_type = ${idx}")
+            params.append(body.period_type)
+            idx += 1
+        if body.weights is not None:
+            updates.append(f"weights = ${idx}")
+            params.append(body.weights)
+            idx += 1
+        if body.caps is not None:
+            updates.append(f"caps = ${idx}")
+            params.append(body.caps)
+            idx += 1
+        if body.enabled is not None:
+            updates.append(f"enabled = ${idx}")
+            params.append(body.enabled)
+            idx += 1
+        if not updates:
+            return {
+                "id": row["id"],
+                "name": row["name"],
+                "period_type": row["period_type"],
+                "weights": dict(row["weights"] or {}),
+                "caps": dict(row["caps"] or {}),
+                "enabled": row["enabled"],
+            }
+        updates.append("updated_at = NOW()")
+        params.extend([rule_id])
+        await conn.execute(
+            f"UPDATE incentive_rules SET {', '.join(updates)} WHERE id = ${idx}",
+            *params,
+        )
+        row = await conn.fetchrow(
+            "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules WHERE id = $1",
+            rule_id,
+        )
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "period_type": row["period_type"],
+        "weights": dict(row["weights"] or {}),
+        "caps": dict(row["caps"] or {}),
+        "enabled": row["enabled"],
+        "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
+        "updated_at": row["updated_at"].isoformat() if row.get("updated_at") else None,
+    }
+
+
+@app.delete("/api/incentive-rules/{rule_id}", dependencies=[Depends(require_api_key)], status_code=204)
+async def delete_incentive_rule(rule_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT id FROM incentive_rules WHERE id = $1", rule_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Incentive rule not found")
+        await conn.execute("UPDATE incentive_rules SET enabled = FALSE WHERE id = $1", rule_id)
+
+
+@app.post("/api/incentive-rules/{rule_id}/recalculate", dependencies=[Depends(require_api_key)])
+async def recalculate_incentive_rule(rule_id: int):
+    """Trigger contribution calculation for the rule's period_type (latest period)."""
+    from contribution_engine import run_calculate_latest
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT id, period_type FROM incentive_rules WHERE id = $1 AND enabled = TRUE",
+            rule_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Incentive rule not found or disabled")
+    await run_calculate_latest(row["period_type"], rule_id=rule_id)
+    return {"ok": True, "message": f"Recalculated {row['period_type']} for rule {rule_id}."}
 
 
 # ─── 健康检查 ─────────────────────────────────────────────────────────────────

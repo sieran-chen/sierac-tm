@@ -8,9 +8,9 @@
 ## 进度概览
 
 - **总任务数**：15
-- **已完成**：4（Task 1–4）
+- **已完成**：8（Task 1–8）
 - **进行中**：0
-- **未开始**：11
+- **未开始**：7
 
 ---
 
@@ -25,10 +25,10 @@
 
 ## Phase 2：API
 
-- [ ] **Task 5**：Collector 新增 `GET /api/contributions/my`（成员端：我的贡献，含得分、排名、维度明细、项目分布）
-- [ ] **Task 6**：Collector 新增 `GET /api/contributions/leaderboard`（管理端：排行榜，支持 hook_only 过滤）
-- [ ] **Task 7**：Collector 新增 `GET/POST/PUT/DELETE /api/incentive-rules`（规则 CRUD）
-- [ ] **Task 8**：Collector 新增 `POST /api/incentive-rules/{id}/recalculate`（手动触发重新计算）
+- [x] **Task 5**：Collector 新增 `GET /api/contributions/my`（成员端：我的贡献，含得分、排名、维度明细、项目分布）
+- [x] **Task 6**：Collector 新增 `GET /api/contributions/leaderboard`（管理端：排行榜，支持 hook_only 过滤）
+- [x] **Task 7**：Collector 新增 `GET/POST/PUT/DELETE /api/incentive-rules`（规则 CRUD）
+- [x] **Task 8**：Collector 新增 `POST /api/incentive-rules/{id}/recalculate`（手动触发重新计算）
 
 ---
 

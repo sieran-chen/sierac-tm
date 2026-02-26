@@ -16,6 +16,7 @@ from pydantic import BaseModel
 
 from alerts import check_alerts
 from config import settings
+from contribution_engine import run_calculate_latest
 from database import close_pool, get_pool, init_db
 from git_collector import run_git_collect
 from sync import run_full_sync
@@ -37,6 +38,38 @@ async def lifespan(app: FastAPI):
         minutes=settings.sync_interval_minutes,
         id="sync",
     )
+    # Contribution score: daily 00:30, weekly Mon 01:00, monthly 1st 01:30 (Asia/Shanghai)
+    try:
+        import zoneinfo
+        tz = zoneinfo.ZoneInfo("Asia/Shanghai")
+    except ImportError:
+        tz = None
+    scheduler.add_job(
+        _job_contribution_daily,
+        "cron",
+        hour=0,
+        minute=30,
+        id="contribution_daily",
+        timezone=tz,
+    )
+    scheduler.add_job(
+        _job_contribution_weekly,
+        "cron",
+        day_of_week="mon",
+        hour=1,
+        minute=0,
+        id="contribution_weekly",
+        timezone=tz,
+    )
+    scheduler.add_job(
+        _job_contribution_monthly,
+        "cron",
+        day=1,
+        hour=1,
+        minute=30,
+        id="contribution_monthly",
+        timezone=tz,
+    )
     scheduler.start()
     log.info("Scheduler started, sync every %d min", settings.sync_interval_minutes)
 
@@ -53,6 +86,27 @@ async def _sync_and_alert():
         await run_git_collect()
     except Exception as e:
         log.exception("Git collect failed: %s", e)
+
+
+async def _job_contribution_daily():
+    try:
+        await run_calculate_latest("daily")
+    except Exception as e:
+        log.exception("Contribution daily failed: %s", e)
+
+
+async def _job_contribution_weekly():
+    try:
+        await run_calculate_latest("weekly")
+    except Exception as e:
+        log.exception("Contribution weekly failed: %s", e)
+
+
+async def _job_contribution_monthly():
+    try:
+        await run_calculate_latest("monthly")
+    except Exception as e:
+        log.exception("Contribution monthly failed: %s", e)
 
 
 app = FastAPI(title="Cursor Admin Collector", lifespan=lifespan)

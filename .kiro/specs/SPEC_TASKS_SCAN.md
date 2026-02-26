@@ -20,7 +20,7 @@
 
 - **cursor-admin-core**：Cursor API 数据同步（成员/用量/支出）、Hook 会话接收（含 project_id）、告警规则与通知、管理端查询 API。数据底座，已完成。
 - **cursor-admin-hooks**：Hook 协议（beforeSubmitPrompt 白名单校验 + stop 会话上报）、上报契约（POST /api/sessions，含 project_id）；Java 与 Python 双实现；项目级自动部署（`.cursor/` 目录注入）。
-- **cursor-admin-projects**：**项目立项与治理**——项目 CRUD、白名单管理、Hook 准入拦截、会话归属项目、Git 仓库采集、按项目聚合成本与贡献、GitLab 仓库自动创建与 Hook 注入。Phase 0，所有贡献可视化与激励的前置。
+- **cursor-admin-projects**：**项目立项与治理**——项目 CRUD、白名单管理、Hook 准入拦截、会话归属项目、Git 仓库采集、按项目聚合成本与贡献；**GitLab 与 GitHub** 仓库自动创建与 Hook 注入。Phase 0，所有贡献可视化与激励的前置。
 - **cursor-admin-incentives**：贡献度计算（三源融合：Git + Hook + Cursor API）、个人贡献画像、排行榜、激励规则配置。依赖 projects spec 提供的项目实体与 Git 贡献数据。
 
 ---
@@ -28,7 +28,7 @@
 ## 执行顺序
 
 ```
-Phase 0: cursor-admin-projects（立项 → 白名单 → Git 采集 → 按项目聚合 → GitLab 自动化）
+Phase 0: cursor-admin-projects（立项 → 白名单 → Git 采集 → 按项目聚合 → GitLab/GitHub 自动化）
     ↓
 Phase 1: cursor-admin-incentives Phase 1（贡献度计算 + 我的贡献）
     ↓

@@ -1,0 +1,108 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - heading "项目管理" [level=1] [ref=e58]
+        - button "新建项目" [active] [ref=e59] [cursor=pointer]:
+          - img [ref=e60]
+          - text: 新建项目
+      - generic [ref=e61]:
+        - generic [ref=e62]: 状态
+        - combobox [ref=e63]:
+          - option "全部"
+          - option "启用" [selected]
+          - option "已归档"
+      - table [ref=e65]:
+        - rowgroup [ref=e66]:
+          - row "项目名称 描述 工作目录规则 仓库状态 状态 创建时间 操作" [ref=e67]:
+            - columnheader "项目名称" [ref=e68]
+            - columnheader "描述" [ref=e69]
+            - columnheader "工作目录规则" [ref=e70]
+            - columnheader "仓库状态" [ref=e71]
+            - columnheader "状态" [ref=e72]
+            - columnheader "创建时间" [ref=e73]
+            - columnheader "操作" [ref=e74]
+        - rowgroup [ref=e75]:
+          - row "暂无项目" [ref=e76]:
+            - cell "暂无项目" [ref=e77]
+      - generic [ref=e79]:
+        - heading "新建项目" [level=2] [ref=e80]
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - generic [ref=e83]: 项目名称 *
+            - textbox "如 Sierac-tm" [ref=e84]
+          - generic [ref=e85]:
+            - generic [ref=e86]: 描述
+            - textbox "简要说明" [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e89]: 工作目录规则 *（一行一条路径前缀）
+            - textbox "D:\\AI\\Sierac-tm /home/dev/sierac-tm" [ref=e90]:
+              - /placeholder: "D:\\AI\\Sierac-tm\n/home/dev/sierac-tm"
+          - generic [ref=e91]:
+            - generic [ref=e92]: 参与成员邮箱（一行一个，留空表示全员）
+            - textbox "可选" [ref=e93]
+          - generic [ref=e94]:
+            - generic [ref=e95]: 仓库创建方式
+            - generic [ref=e96]:
+              - generic [ref=e97] [cursor=pointer]:
+                - radio "关联已有仓库" [checked] [ref=e98]
+                - generic [ref=e99]: 关联已有仓库
+              - generic [ref=e100] [cursor=pointer]:
+                - radio "自动创建（GitLab）" [ref=e101]
+                - generic [ref=e102]: 自动创建（GitLab）
+          - generic [ref=e103]:
+            - generic [ref=e104]: 创建人邮箱 *
+            - textbox "admin@company.com" [ref=e105]
+        - generic [ref=e106]:
+          - button "取消" [ref=e107] [cursor=pointer]
+          - button "保存" [disabled]:
+            - img
+            - text: 保存
+```

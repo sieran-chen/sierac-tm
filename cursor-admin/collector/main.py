@@ -474,6 +474,7 @@ class ProjectCreate(BaseModel):
     git_repos: list[str] = []
     auto_create_repo: bool = False
     repo_slug: str | None = None
+    repo_provider: str | None = None  # 'gitlab' | 'github'; when auto_create_repo, which provider to use
 
 
 class ProjectUpdate(BaseModel):
@@ -502,9 +503,7 @@ async def list_projects(status: str | None = Query(None)):
 
 @app.post("/api/projects", dependencies=[Depends(require_api_key)])
 async def create_project(request: Request, body: ProjectCreate):
-    """Create project. If auto_create_repo=true and repo_slug set, create GitLab repo and inject Hook."""
-    from gitlab_client import GitLabError, gitlab_client
-
+    """Create project. If auto_create_repo=true and repo_slug set, create GitLab or GitHub repo and inject Hook."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
@@ -520,42 +519,85 @@ async def create_project(request: Request, body: ProjectCreate):
             body.created_by,
         )
     project_id = row["id"]
+    collector_url = str(request.base_url).rstrip("/")
+    provider = (body.repo_provider or "gitlab").lower() if body.auto_create_repo and body.repo_slug else None
 
-    if body.auto_create_repo and body.repo_slug and gitlab_client.is_configured():
-        collector_url = str(request.base_url).rstrip("/")
-        try:
-            gl = gitlab_client.create_project(
-                name=body.name,
-                path_slug=body.repo_slug,
-                description=body.description or "",
-            )
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    """
-                    UPDATE projects SET gitlab_project_id=$1, repo_url=$2, repo_ssh_url=$3,
-                        git_repos=$4, updated_at=NOW()
-                    WHERE id=$5
-                    """,
+    if provider == "github":
+        from github_client import GitHubError, github_client
+
+        if github_client.is_configured():
+            try:
+                gh = github_client.create_repo(
+                    name=body.name,
+                    repo_slug=body.repo_slug,
+                    description=body.description or "",
+                    private=True,
+                )
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        UPDATE projects SET repo_provider=$1, github_repo_full_name=$2,
+                            repo_url=$3, repo_ssh_url=$4, git_repos=$5, updated_at=NOW()
+                        WHERE id=$6
+                        """,
+                        "github",
+                        gh.repo_full_name,
+                        gh.repo_url,
+                        gh.repo_ssh_url,
+                        [gh.repo_url],
+                        project_id,
+                    )
+                github_client.push_initial_commit(
+                    gh.repo_full_name,
+                    collector_url=collector_url,
+                    project_id=project_id,
+                    branch=gh.default_branch,
+                )
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                        project_id,
+                    )
+            except GitHubError as exc:
+                log.warning("GitHub repo create failed for project %s: %s", project_id, exc)
+    elif provider == "gitlab":
+        from gitlab_client import GitLabError, gitlab_client
+
+        if gitlab_client.is_configured():
+            try:
+                gl = gitlab_client.create_project(
+                    name=body.name,
+                    path_slug=body.repo_slug,
+                    description=body.description or "",
+                )
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        UPDATE projects SET repo_provider=$1, gitlab_project_id=$2, repo_url=$3, repo_ssh_url=$4,
+                            git_repos=$5, updated_at=NOW()
+                        WHERE id=$6
+                        """,
+                        "gitlab",
+                        gl.gitlab_project_id,
+                        gl.repo_url,
+                        gl.repo_ssh_url,
+                        [gl.repo_url],
+                        project_id,
+                    )
+                gitlab_client.push_initial_commit(
                     gl.gitlab_project_id,
-                    gl.repo_url,
-                    gl.repo_ssh_url,
-                    [gl.repo_url],
-                    project_id,
+                    collector_url=collector_url,
+                    project_id=project_id,
                 )
-            gitlab_client.push_initial_commit(
-                gl.gitlab_project_id,
-                collector_url=collector_url,
-                project_id=project_id,
-            )
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                    project_id,
-                )
-            if body.member_emails:
-                gitlab_client.add_members(gl.gitlab_project_id, body.member_emails)
-        except GitLabError as exc:
-            log.warning("GitLab repo create failed for project %s: %s", project_id, exc)
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                        project_id,
+                    )
+                if body.member_emails:
+                    gitlab_client.add_members(gl.gitlab_project_id, body.member_emails)
+            except GitLabError as exc:
+                log.warning("GitLab repo create failed for project %s: %s", project_id, exc)
 
     async with pool.acquire() as conn:
         row = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
@@ -762,39 +804,73 @@ async def archive_project(project_id: int):
 
 @app.post("/api/projects/{project_id}/reinject-hook", dependencies=[Depends(require_api_key)])
 async def reinject_hook(request: Request, project_id: int):
-    """Re-inject Hook files into the project's GitLab repository."""
-    from gitlab_client import GitLabError, gitlab_client
-
+    """Re-inject Hook files into the project's GitLab or GitHub repository."""
     pool = await get_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT id, gitlab_project_id FROM projects WHERE id=$1", project_id)
+        row = await conn.fetchrow(
+            "SELECT id, repo_provider, gitlab_project_id, github_repo_full_name FROM projects WHERE id=$1",
+            project_id,
+        )
     if not row:
         raise HTTPException(status_code=404, detail="Project not found")
-    if not row["gitlab_project_id"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Project has no GitLab repository; create one first or link an existing repo.",
-        )
-    if not gitlab_client.is_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="GitLab not configured; set GITLAB_URL, GITLAB_TOKEN, GITLAB_GROUP_ID.",
-        )
     collector_url = str(request.base_url).rstrip("/")
-    try:
-        gitlab_client.inject_hook_files(
-            gitlab_project_id=row["gitlab_project_id"],
-            collector_url=collector_url,
-            project_id=project_id,
-        )
-        async with pool.acquire() as conn:
-            await conn.execute(
-                "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                project_id,
+
+    if row.get("repo_provider") == "github":
+        from github_client import GitHubError, github_client
+
+        full_name = row.get("github_repo_full_name")
+        if not full_name:
+            raise HTTPException(
+                status_code=400,
+                detail="Project has no GitHub repository; create one first or link an existing repo.",
             )
-    except GitLabError as exc:
-        log.warning("Reinject hook failed for project %s: %s", project_id, exc)
-        raise HTTPException(status_code=502, detail=f"GitLab error: {exc!s}") from exc
+        if not github_client.is_configured():
+            raise HTTPException(
+                status_code=503,
+                detail="GitHub not configured; set GITHUB_TOKEN.",
+            )
+        try:
+            github_client.inject_hook_files(
+                full_name,
+                collector_url=collector_url,
+                project_id=project_id,
+            )
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                    project_id,
+                )
+        except GitHubError as exc:
+            log.warning("Reinject hook failed for project %s: %s", project_id, exc)
+            raise HTTPException(status_code=502, detail=f"GitHub error: {exc!s}") from exc
+    else:
+        from gitlab_client import GitLabError, gitlab_client
+
+        gl_id = row.get("gitlab_project_id")
+        if not gl_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Project has no GitLab repository; create one first or link an existing repo.",
+            )
+        if not gitlab_client.is_configured():
+            raise HTTPException(
+                status_code=503,
+                detail="GitLab not configured; set GITLAB_URL, GITLAB_TOKEN, GITLAB_GROUP_ID.",
+            )
+        try:
+            gitlab_client.inject_hook_files(
+                gitlab_project_id=gl_id,
+                collector_url=collector_url,
+                project_id=project_id,
+            )
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                    project_id,
+                )
+        except GitLabError as exc:
+            log.warning("Reinject hook failed for project %s: %s", project_id, exc)
+            raise HTTPException(status_code=502, detail=f"GitLab error: {exc!s}") from exc
     return {"ok": True, "message": "Hook files re-injected."}
 
 
@@ -993,26 +1069,42 @@ class IncentiveRuleUpdate(BaseModel):
     enabled: bool | None = None
 
 
+def _norm_jsonb(val):
+    """Normalize JSONB/dict for JSON response (asyncpg may return dict or custom type)."""
+    if val is None:
+        return {}
+    if isinstance(val, dict):
+        return val
+    try:
+        return dict(val)
+    except (TypeError, ValueError):
+        return {}
+
+
 @app.get("/api/incentive-rules", dependencies=[Depends(require_api_key)])
 async def list_incentive_rules(enabled_only: bool = Query(False)):
     """List incentive rules. enabled_only=true returns only enabled rules."""
+    import asyncpg
     pool = await get_pool()
-    async with pool.acquire() as conn:
-        if enabled_only:
-            rows = await conn.fetch(
-                "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules WHERE enabled = TRUE ORDER BY id"
-            )
-        else:
-            rows = await conn.fetch(
-                "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules ORDER BY id"
-            )
+    try:
+        async with pool.acquire() as conn:
+            if enabled_only:
+                rows = await conn.fetch(
+                    "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules WHERE enabled = TRUE ORDER BY id"
+                )
+            else:
+                rows = await conn.fetch(
+                    "SELECT id, name, period_type, weights, caps, enabled, created_at, updated_at FROM incentive_rules ORDER BY id"
+                )
+    except asyncpg.UndefinedTableError:
+        return []
     return [
         {
             "id": r["id"],
             "name": r["name"],
             "period_type": r["period_type"],
-            "weights": dict(r["weights"] or {}),
-            "caps": dict(r["caps"] or {}),
+            "weights": _norm_jsonb(r.get("weights")),
+            "caps": _norm_jsonb(r.get("caps")),
             "enabled": r["enabled"],
             "created_at": r["created_at"].isoformat() if r.get("created_at") else None,
             "updated_at": r["updated_at"].isoformat() if r.get("updated_at") else None,

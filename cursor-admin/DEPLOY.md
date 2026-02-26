@@ -58,7 +58,11 @@ cd cursor-admin
 
 脚本会在服务器上执行：`cd /opt/Sierac-tm && git pull && cd cursor-admin && docker compose up -d --build`。
 
+**部署前**：请先将本地修改 **push 到远程**，否则服务器 `git pull` 拉不到最新代码。
+
 可选环境变量：`DEPLOY_HOST`、`DEPLOY_USER`、`REMOTE_REPO`（默认 `REMOTE_REPO=/opt/Sierac-tm`）。
+
+**新版本说明**：Collector 启动时会自动执行 `db/migrations/` 下所有 `.sql`（含 004_github_projects，用于支持 GitHub 立项）。若需立项时自动创建 **GitHub** 仓库，在服务器 `cursor-admin/.env` 中配置 `GITHUB_TOKEN`、可选 `GITHUB_ORG`；GitLab 仍为 `GITLAB_URL`、`GITLAB_TOKEN`、`GITLAB_GROUP_ID`。
 
 ---
 

@@ -1,0 +1,103 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [active] [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - heading "用量总览" [level=1] [ref=e57]
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]: 成员
+          - combobox [ref=e61]:
+            - option "全部成员" [selected]
+            - option "chenjie@sierac.cn"
+            - option "PENGFEI CHEN"
+            - option "lxy@sierac.cn"
+            - option "zhoushengmeng@sierac.cn"
+        - generic [ref=e62]:
+          - generic [ref=e63]: 开始日期
+          - textbox [ref=e64]: 2026-02-12
+        - generic [ref=e65]:
+          - generic [ref=e66]: 结束日期
+          - textbox [ref=e67]: 2026-02-26
+      - heading "每日请求趋势" [level=2] [ref=e69]
+      - generic [ref=e71]:
+        - heading "按成员汇总（所选时段）" [level=2] [ref=e73]
+        - table [ref=e74]:
+          - rowgroup [ref=e75]:
+            - row "成员 Agent 请求 Chat 请求 新增代码行 按量计费次数" [ref=e76]:
+              - columnheader "成员" [ref=e77]
+              - columnheader "Agent 请求" [ref=e78]
+              - columnheader "Chat 请求" [ref=e79]
+              - columnheader "新增代码行" [ref=e80]
+              - columnheader "按量计费次数" [ref=e81]
+          - rowgroup [ref=e82]:
+            - row "chenpengfei@sierac.cn 71 0 5,772 0" [ref=e83]:
+              - cell "chenpengfei@sierac.cn" [ref=e84]
+              - cell "71" [ref=e85]
+              - cell "0" [ref=e86]
+              - cell "5,772" [ref=e87]
+              - cell "0" [ref=e88]
+            - row "zhoushengmeng@sierac.cn 22 0 6,031 0" [ref=e89]:
+              - cell "zhoushengmeng@sierac.cn" [ref=e90]
+              - cell "22" [ref=e91]
+              - cell "0" [ref=e92]
+              - cell "6,031" [ref=e93]
+              - cell "0" [ref=e94]
+            - row "lxy@sierac.cn 3 0 46 0" [ref=e95]:
+              - cell "lxy@sierac.cn" [ref=e96]
+              - cell "3" [ref=e97]
+              - cell "0" [ref=e98]
+              - cell "46" [ref=e99]
+              - cell "0" [ref=e100]
+            - row "chenjie@sierac.cn 2 0 11 0" [ref=e101]:
+              - cell "chenjie@sierac.cn" [ref=e102]
+              - cell "2" [ref=e103]
+              - cell "0" [ref=e104]
+              - cell "11" [ref=e105]
+              - cell "0" [ref=e106]
+```

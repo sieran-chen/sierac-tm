@@ -120,6 +120,8 @@ export interface Project {
   member_emails: string[]
   status: string
   gitlab_project_id: number | null
+  repo_provider: string | null
+  github_repo_full_name: string | null
   repo_url: string
   repo_ssh_url: string
   hook_initialized: boolean
@@ -137,6 +139,7 @@ export interface ProjectCreate {
   git_repos?: string[]
   auto_create_repo?: boolean
   repo_slug?: string
+  repo_provider?: 'gitlab' | 'github'
 }
 
 export interface ProjectUpdate {

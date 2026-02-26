@@ -4,8 +4,9 @@ import { Plus, Archive, Edit2, Check, X, Copy, RefreshCw } from 'lucide-react'
 import { api, Project, ProjectCreate, ProjectUpdate } from '../api/client'
 
 function repoStatus(p: Project): 'created' | 'failed' | 'none' {
-  if (p.gitlab_project_id && p.hook_initialized) return 'created'
-  if (p.gitlab_project_id && !p.hook_initialized) return 'failed'
+  const hasRepo = !!(p.gitlab_project_id || (p.repo_provider === 'github' && p.github_repo_full_name))
+  if (hasRepo && p.hook_initialized) return 'created'
+  if (hasRepo && !p.hook_initialized) return 'failed'
   return 'none'
 }
 
@@ -52,14 +53,16 @@ export default function ProjectsPage() {
     } else {
       const createMode = (form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual'
       const slug = (form as FormState & { _repoSlug?: string })._repoSlug ?? ''
+      const isAuto = createMode === 'auto_gitlab' || createMode === 'auto_github'
       const res = await api.createProject({
         name: form.name,
         description: form.description ?? '',
         workspace_rules: textToLines(_wr),
         member_emails: textToLines(_me),
         created_by: form.created_by,
-        auto_create_repo: createMode === 'auto',
-        repo_slug: createMode === 'auto' ? slug || undefined : undefined,
+        auto_create_repo: isAuto,
+        repo_slug: isAuto ? slug || undefined : undefined,
+        repo_provider: createMode === 'auto_github' ? 'github' : createMode === 'auto_gitlab' ? 'gitlab' : undefined,
       })
       if (res.repo_url || res.repo_ssh_url) {
         setCreatedProject(res)
@@ -334,7 +337,7 @@ export default function ProjectsPage() {
                 <>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">仓库创建方式</label>
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -348,14 +351,23 @@ export default function ProjectsPage() {
                         <input
                           type="radio"
                           name="createRepoMode"
-                          checked={((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto'}
-                          onChange={() => setForm({ ...form, _createRepoMode: 'auto' } as FormState)}
+                          checked={((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_gitlab'}
+                          onChange={() => setForm({ ...form, _createRepoMode: 'auto_gitlab' } as FormState)}
                         />
                         <span className="text-sm">自动创建（GitLab）</span>
                       </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="createRepoMode"
+                          checked={((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_github'}
+                          onChange={() => setForm({ ...form, _createRepoMode: 'auto_github' } as FormState)}
+                        />
+                        <span className="text-sm">自动创建（GitHub）</span>
+                      </label>
                     </div>
                   </div>
-                  {((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto' && (
+                  {(((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_gitlab' || ((form as FormState & { _createRepoMode?: string })._createRepoMode ?? 'manual') === 'auto_github') && (
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">仓库路径（slug）*</label>
                       <input
@@ -406,7 +418,7 @@ export default function ProjectsPage() {
                   !(form as FormState & { _wr?: string })._wr?.trim() ||
                   (!form.id && !form.created_by?.trim()) ||
                   (!form.id &&
-                    ((form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto') &&
+                    (((form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_gitlab' || (form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_github') &&
                     !(form as FormState & { _repoSlug?: string })._repoSlug?.trim())
                 }
                 className="flex items-center gap-2 px-4 py-2 text-sm bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none"

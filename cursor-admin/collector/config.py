@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     gitlab_default_branch: str = "main"
     gitlab_visibility: str = "private"
 
+    # GitHub（立项时自动创建仓库、注入 Hook；不配置则仅支持手动关联已有仓库）
+    github_token: str = ""
+    github_org: str = ""  # 留空则在 token 所属用户下创建
+    github_default_branch: str = "main"
+
     # Git 采集（定时扫描项目仓库，写入 git_contributions）
     git_repos_root: str = "/data/git-repos"
     git_collect_days: int = 3

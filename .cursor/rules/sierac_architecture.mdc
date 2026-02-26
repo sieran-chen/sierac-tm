@@ -10,71 +10,125 @@ alwaysApply: false
 ---
 # Sierac-tm 架构规范
 
-> **版本**: v1.0.0 (2026-02-25)
+> **版本**: v2.1.0 (2026-02-26)
 > **架构真源**: `docs/ARCHITECTURE.md`
 
 ---
 
-## 一、包结构
+## 一、核心实体
+
+**项目（Project）是平台的一等实体**。所有贡献数据、参与数据、成本归属、治理策略都围绕「项目」组织。
+
+- 管理员在平台「立项」→ 自动在 GitLab 创建仓库（含 Hook）→ 白名单生效。
+- 成员 clone 仓库 → Hook 自动生效 → 白名单校验放行或拦截。
+- 上报数据自动归属到项目；Git 采集、贡献度计算均以已立项项目为范围。
+
+---
+
+## 二、包结构
 
 ```
 cursor-admin/
 ├── collector/           # 采集服务（Python, FastAPI）
 │   ├── main.py          # 入口、API、定时任务
 │   ├── sync.py          # Cursor API 同步
+│   ├── git_sync.py      # Git 仓库采集（定时扫描已立项项目）
+│   ├── gitlab_client.py # GitLab API 客户端（仓库创建、Hook 注入、成员管理）
 │   ├── alerts.py        # 告警检测与通知
 │   ├── cursor_api.py    # Cursor API 客户端（唯一出口）
 │   ├── database.py      # 连接与迁移
-│   └── config.py
+│   ├── config.py
+│   └── hook_templates/  # Hook 模板文件（立项时注入仓库）
+│       ├── hooks.json
+│       ├── cursor_hook.py
+│       ├── hook_config.json.tmpl
+│       └── gitignore.tmpl
 ├── db/migrations/       # SQL 迁移（幂等）
-├── hook/                # 客户端 Hook（多语言）
-│   ├── java/            # Java 实现（主推）
-│   └── cursor_hook.py   # Python 实现（备选）
-└── web/                 # 管理端（TypeScript, React）
+│   ├── 001_init.sql
+│   └── 002_projects.sql # 项目、Git 贡献、会话归属
+├── hook/                # 客户端 Hook（模板源 + 全局安装脚本）
+│   ├── cursor_hook.py   # Python 实现
+│   ├── install.sh | .ps1
+│   └── hooks.json 模板
+└── web/                 # 管理端 + 成员端（TypeScript, React）
     └── src/
+        └── pages/
+            ├── ProjectsPage.tsx   # 项目管理
+            ├── ProjectDetailPage.tsx  # 项目详情（成本+贡献）
+            └── MyContributionsPage.tsx  # 我的贡献
 ```
 
 ---
 
-## 二、集成边界
+## 三、集成边界
 
-| 能力           | 自建 | 集成           | 隔离位置 |
-|----------------|------|----------------|----------|
-| 采集 API、同步、告警 | ✅   |                | collector/*.py |
-| Cursor API 调用 |      | ✅ Cursor 官方  | **cursor_api.py 唯一** |
-| Hook 协议      | ✅   | Cursor Hooks 约定 | hook/* 多语言 |
-| 管理端         | ✅   |                | web/src |
-| 数据库         | ✅   | PostgreSQL     | db/migrations |
+| 能力 | 自建 | 集成 | 隔离位置 |
+|------|------|------|----------|
+| 项目立项、白名单、贡献聚合 | ✅ | | collector/*.py |
+| 采集 API、同步、告警 | ✅ | | collector/*.py |
+| Cursor API 调用 | | ✅ Cursor 官方 | **cursor_api.py 唯一** |
+| GitLab 仓库管理 | | ✅ GitLab API v4 | **gitlab_client.py 唯一** |
+| Git 仓库采集 | ✅ | Git CLI | **git_sync.py** |
+| Hook 协议 + 白名单校验 | ✅ | Cursor Hooks 约定 | hook/* + hook_templates/ |
+| 管理端 + 成员端 | ✅ | | web/src |
+| 数据库 | ✅ | PostgreSQL | db/migrations |
 
 **约束**：
 - 所有对 Cursor Admin/Analytics API 的调用必须经 `cursor_api.py`，不得在其他模块直接请求 Cursor。
-- Hook 与 collector 之间仅通过 HTTP JSON 契约通信（见 `.kiro/specs/cursor-admin-hooks/design.md`）。
+- 所有对 GitLab API 的调用必须经 `gitlab_client.py`，不得在其他模块直接请求 GitLab。
+- Hook 与 collector 之间仅通过 HTTP JSON 契约通信。
+- Git 操作集中在 `git_sync.py`，不得在其他模块直接调用 git。
 
 ---
 
-## 三、Hook 多语言
+## 四、数据流（三源融合）
 
-- **主推**：Java 11+，fat JAR，`~/.cursor/hooks/cursor_hook.jar`。
-- **备选**：Python 3，`~/.cursor/hooks/cursor_hook.py`。
-- 两者行为与协议一致：stdin 一行 JSON，stdout `{"continue":true}`；仅 `beforeSubmitPrompt` 与 `stop` 两类事件；上报字段见 spec。
+```
+管理员立项 → POST /api/projects → projects 表（白名单）
+    ↓
+gitlab_client.py → GitLab 创建仓库 + 注入 .cursor/ Hook → 回填 repo_url
+    ↓
+成员 clone 仓库 → Hook 自动生效
+    ↓
+Hook → 白名单校验 → 放行/拦截 → agent_sessions（标记 project_id）
+    ↓
+Git 仓库 → git_sync.py 定时扫描 → git_contributions（按项目按人按日）
+    ↓
+Cursor API → sync.py 定时拉取 → daily_usage, spend_snapshots
+    ↓
+贡献度计算 → 融合三源 → contribution_scores
+    ↓
+管理端：按项目看成本与贡献 / 成员端：我的贡献
+```
 
 ---
 
-## 四、数据库
+## 五、Hook 分发
+
+- **项目级（主推）**：立项时自动注入 `.cursor/hook/cursor_hook.py` 到仓库，成员 clone 即生效。
+- **全局级（备选）**：通过 `install.sh` / `install.ps1` 安装到 `~/.cursor/hooks/`，用于未立项场景的兜底拦截。
+- **Hook 模板**：`collector/hook_templates/` 维护模板文件，立项时动态替换 `collector_url`、`project_id` 等变量。
+- 行为与协议一致：stdin JSON，stdout JSON；`beforeSubmitPrompt`（白名单校验 + 记录开始）、`stop`（上报会话 + project_id）。
+
+---
+
+## 六、数据库
 
 - 使用 **PostgreSQL**，迁移为 **SQL 文件幂等执行**（无 Alembic，启动时 `database.init_db()` 按序执行 `db/migrations/*.sql`）。
 - 时间字段统一 **TIMESTAMPTZ**；主键可为自增或 UUID，视表而定。
-- 若未来多租户，表需含 `tenant_id` 且索引以 `tenant_id` 为前缀。
+- 核心表：`projects`、`members`、`daily_usage`、`spend_snapshots`、`agent_sessions`（含 project_id）、`git_contributions`、`contribution_scores`、`alert_rules`、`alert_events`。
 
 ---
 
-## 五、文档引用
+## 七、文档引用
 
-| 查什么   | 去哪里 |
-|----------|--------|
+| 查什么 | 去哪里 |
+|--------|--------|
 | 架构决策 | `docs/ARCHITECTURE.md` |
-| Spec 设计 | `.kiro/specs/*/design.md` |
+| 项目立项设计 | `.kiro/specs/cursor-admin-projects/design.md` |
+| 贡献与激励设计 | `.kiro/specs/cursor-admin-incentives/design.md` |
+| Spec 总览 | `.kiro/specs/SPEC_TASKS_SCAN.md` |
 
 ---
 
-**执行承诺**：Cursor API 单点出口 · Hook 协议统一 · 文档驱动
+**执行承诺**：项目为一等实体 · Cursor API 单点出口 · GitLab API 单点出口 · Git 操作集中隔离 · Hook 协议统一 · 文档驱动

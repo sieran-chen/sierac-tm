@@ -2,7 +2,7 @@
 
 > **目标**：定义采集服务、数据模型、API 与管理端的技术设计。  
 > **状态**：已完成（与当前实现对齐）  
-> **最后更新**：2026-02-25
+> **最后更新**：2026-02-26
 
 ---
 
@@ -34,9 +34,9 @@
                              │ asyncpg
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  PostgreSQL                                                      │
-│  members | daily_usage | spend_snapshots | agent_sessions |       │
-│  alert_rules | alert_events                                       │
+  │  PostgreSQL                                                      │
+  │  members | daily_usage | spend_snapshots | agent_sessions |       │
+  │  alert_rules | alert_events | projects (由 cursor-admin-projects 扩展) │
 └─────────────────────────────────────────────────────────────────┘
                              ▲
                              │ x-api-key, GET
@@ -65,7 +65,8 @@
 - **members**：user_id, email, name, role, is_removed, synced_at.
 - **daily_usage**：email, day, agent_requests, chat_requests, composer_requests, total_tabs_*, total_lines_*, usage_based_reqs, most_used_model, is_active, synced_at；UNIQUE(email, day).
 - **spend_snapshots**：email, billing_cycle_start, spend_cents, fast_premium_requests, monthly_limit_dollars, synced_at；UNIQUE(email, billing_cycle_start).
-- **agent_sessions**：conversation_id(UNIQUE), user_email, machine_id, workspace_roots(ARRAY), primary_workspace(GENERATED), started_at, ended_at, duration_seconds, created_at.
+- **agent_sessions**：conversation_id(UNIQUE), user_email, machine_id, workspace_roots(ARRAY), primary_workspace(GENERATED), started_at, ended_at, duration_seconds, project_id(FK→projects, NULLABLE), created_at.  
+  `project_id` 由 Hook 上报携带，或由 Collector 根据 workspace_roots 匹配 projects 表自动补填。
 - **alert_rules**：name, metric, scope, target_email, threshold, notify_channels(JSONB), enabled.
 - **alert_events**：rule_id, triggered_at, metric_value, threshold, detail(JSONB).
 
@@ -78,8 +79,9 @@
 ### 3.1 Hook 上报（入）
 
 - **POST /api/sessions**  
-  Body: `{ "event", "conversation_id", "user_email", "machine_id", "workspace_roots", "ended_at", "duration_seconds"? }`  
-  Response: 204 No Content（无鉴权，内网或 VPN 暴露）。
+  Body: `{ "event", "conversation_id", "user_email", "machine_id", "workspace_roots", "ended_at", "duration_seconds"?, "project_id"? }`  
+  Response: 204 No Content（无鉴权，内网或 VPN 暴露）。  
+  若 Body 无 `project_id`，Collector 根据 `workspace_roots` 与 `projects.workspace_rules` 匹配后补填。
 
 ### 3.2 管理端查询（出）
 
@@ -114,7 +116,8 @@
 ## 7. 与 Hooks、激励的集成
 
 - **Hooks**：仅通过 POST /api/sessions 契约交互；见 cursor-admin-hooks design。
-- **激励扩展**：未来 contribution_scores / leaderboard 表与任务在 cursor-admin-incentives 中设计；本模块仅保证 daily_usage、agent_sessions、spend 数据完整可用。
+- **Projects**：agent_sessions.project_id 由 cursor-admin-projects 扩展；本模块仅保证字段存在（NULLABLE FK）。
+- **激励扩展**：contribution_scores / leaderboard 表与任务在 cursor-admin-incentives 中设计；本模块仅保证 daily_usage、agent_sessions、spend 数据完整可用。
 
 ---
 
@@ -126,4 +129,4 @@
 ---
 
 **维护者**: 团队  
-**最后更新**: 2026-02-25
+**最后更新**: 2026-02-26

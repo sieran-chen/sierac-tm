@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      { "command": "python3 hook/cursor_hook.py" }
+    ],
+    "stop": [
+      { "command": "python3 hook/cursor_hook.py" }
+    ]
+  }
+}

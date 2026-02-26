@@ -1,42 +1,50 @@
-# Cursor Admin — 粗颗粒度团队用量管理系统
+# Sierac-tm — AI 团队贡献可视化与激励平台
+
+> 前身为 Cursor Admin（粗颗粒度用量管理），现已升级为以**项目立项**为核心、以**贡献可视化**驱动团队积极性的管理平台。
 
 ## 功能概览
 
 | 模块 | 说明 |
 |------|------|
+| **项目管理** | 项目立项（白名单）、成本归属、贡献聚合、项目生命周期管理 |
 | **用量总览** | 按成员/日期查看 Agent 请求、Chat 请求、Tab 采纳、新增代码行等，含趋势图 |
-| **工作目录** | 按成员 + 工作目录汇总会话数与累计时长；支持会话明细分页查询 |
-| **支出管理** | 当前计费周期各成员支出、按量请求数、月度上限 |
+| **贡献面板** | 按项目/按人聚合 Git 提交、代码量、Cursor 使用等多维度贡献数据 |
+| **支出管理** | 当前计费周期各成员支出、按量请求数、月度上限，按项目归属 |
 | **告警规则** | 自定义阈值（每日 Agent 请求数 / 支出），支持邮件 + Webhook 通知 |
 | **告警历史** | 查看历史触发记录 |
+| **我的项目**（成员端） | 成员查看自己参与的项目、贡献摘要、排名 |
 
 ## 系统架构
 
 ```
 成员机器（Cursor IDE）
-  └── ~/.cursor/hooks.json          ← 仅监听 stop + beforeSubmitPrompt
-  └── ~/.cursor/hooks/cursor_hook.jar   (Java，JRE 11+)
-        │  每次 Agent 会话结束 → 1 条 HTTP POST
+  └── .cursor/hooks.json              ← 项目级 Hook（推荐）
+  └── .cursor/hook/cursor_hook.py     ← Python Hook 脚本
+        │  白名单校验 + 会话归属上报
         ▼
 服务器（Docker Compose）
-  ┌─────────────────────────────────────┐
-  │  collector（FastAPI :8000）          │
-  │  ├── POST /api/sessions  ← Hook 上报 │
-  │  ├── 定时拉取 Cursor Admin API        │
-  │  │   （每小时：成员/用量/支出）        │
-  │  └── GET /api/...  ← 管理端查询       │
-  │                                     │
-  │  db（PostgreSQL :5432）              │
-  │  ├── members                        │
-  │  ├── daily_usage                    │
-  │  ├── spend_snapshots                │
-  │  ├── agent_sessions  ← Hook 数据     │
-  │  ├── alert_rules                    │
-  │  └── alert_events                   │
-  │                                     │
-  │  web（Nginx :3000）                  │
-  │  └── React 管理端                    │
-  └─────────────────────────────────────┘
+  ┌──────────────────────────────────────────┐
+  │  collector（FastAPI :8000）               │
+  │  ├── POST /api/sessions    ← Hook 上报   │
+  │  ├── /api/projects         ← 项目 CRUD   │
+  │  ├── /api/projects/whitelist ← 白名单    │
+  │  ├── git_sync.py           ← Git 贡献采集 │
+  │  ├── 定时拉取 Cursor Admin API            │
+  │  └── GET /api/...          ← 管理端查询   │
+  │                                          │
+  │  db（PostgreSQL :5432）                   │
+  │  ├── projects              ← 项目立项     │
+  │  ├── members                             │
+  │  ├── daily_usage                         │
+  │  ├── spend_snapshots                     │
+  │  ├── agent_sessions (+project_id)        │
+  │  ├── git_contributions     ← Git 贡献     │
+  │  ├── alert_rules                         │
+  │  └── alert_events                        │
+  │                                          │
+  │  web（Nginx :3000）                       │
+  │  └── React 管理端 + 成员端                │
+  └──────────────────────────────────────────┘
 ```
 
 ---
@@ -135,106 +143,62 @@ cat backup_20260101.sql | docker compose exec -T db psql -U cursor cursor_admin
 
 ---
 
-## 二、客户端 Hook 分发（成员机器）
+## 二、客户端 Hook 分发
 
-Hook 为 **Java** 实现（团队统一技术栈），需 **JRE 11+**。部署到每台成员机器的 `~/.cursor/hooks/` 目录，并配置 `~/.cursor/hooks.json`。
+Hook 为 **Python** 实现，推荐以**项目级**方式部署（`.cursor/hook/`），每个项目仓库自带 Hook 脚本和配置。
 
-### 成员不装 Hook 会怎样？
+### 项目级 Hook（推荐）
 
-| 能力 | 数据来源 | 不装 Hook 时 |
-|------|----------|--------------|
-| 用量总览、支出管理、告警（基于用量/支出） | 服务端定时拉取 **Cursor Admin API** | ✅ 正常，全员可见 |
-| 工作目录（按目录的会话数、时长、会话明细） | 仅来自 **Hook 上报** | ❌ 该成员无此数据 |
+将以下文件放入项目仓库的 `.cursor/` 目录：
 
-因此：不装 Hook 只会缺失「工作目录/会话」细粒度数据；用量与支出仍可从 Cursor 官方 API 获得。若希望工作目录数据覆盖全员，建议用 **方式 B（MDM 批量推送）** 统一部署，或通过规范要求成员安装。
-
-### 构建 JAR（一次性，在任意有 Maven 的机器上）
-
-```bash
-cd cursor-admin/hook/java
-mvn -q package
-# 产物：hook/java/target/cursor_hook.jar（含依赖的 fat JAR）
+```
+your-project/
+├── .cursor/
+│   ├── hooks.json           # Hook 注册（指向 hook/cursor_hook.py）
+│   └── hook/
+│       ├── cursor_hook.py   # Hook 脚本（白名单校验 + 会话上报）
+│       └── hook_config.json # Collector 地址、用户邮箱等配置
 ```
 
-可将 `cursor_hook.jar` 放到内网文件共享或 MDM 分发目录，供安装脚本使用。
+成员 clone 项目后，Cursor 自动识别 `.cursor/hooks.json`，无需额外安装。
 
-### 方式 A：手动安装（少量成员）
+### Hook 工作流程
 
-**macOS / Linux**
+1. **`beforeSubmitPrompt`**：校验当前工作目录是否在白名单项目中
+   - 匹配 → `{"continue": true}`，放行
+   - 不匹配 → 拦截并提示「请先在管理平台立项」
+2. **`stop`**：上报会话归属（workspace + project_id + 时长）到 Collector
+
+### 不装 Hook 会怎样？
+
+| 能力 | 数据来源 | 无 Hook 时 |
+|------|----------|------------|
+| 用量总览、支出管理、告警 | Cursor Admin API（服务端拉取） | 正常 |
+| 项目归属、贡献关联 | Hook 上报 | 该成员无归属数据 |
+| Git 贡献 | 服务端 Git 采集 | 正常（不依赖 Hook） |
+
+### 全局 Hook（备选，用于未立项场景）
+
+若需在所有项目中启用 Hook（含未纳入版本控制的项目），可使用全局安装脚本：
 
 ```bash
-# 确保同目录下已有 cursor_hook.jar（或已执行上面 mvn package，则存在 java/target/cursor_hook.jar）
-COLLECTOR_URL=http://your-server:8000 \
-USER_EMAIL=member@company.com \
-bash install.sh
-```
+# macOS/Linux
+COLLECTOR_URL=http://your-server:8000 USER_EMAIL=member@company.com bash install.sh
 
-**Windows（PowerShell）**
-
-```powershell
+# Windows
 $env:COLLECTOR_URL = "http://your-server:8000"
-$env:USER_EMAIL    = "member@company.com"
+$env:USER_EMAIL = "member@company.com"
 .\install.ps1
 ```
-
-### 方式 B：MDM 批量推送（推荐，多成员）
-
-**macOS（Jamf Pro）**
-
-1. 将 `hook/cursor_hook.py` 和 `hook/install.sh` 打包或上传到 Jamf。
-2. 创建 Policy，添加 Script，内容如下：
-
-```bash
-#!/bin/bash
-export COLLECTOR_URL="http://your-server:8000"
-export USER_EMAIL="$(/usr/bin/python3 -c "import subprocess; print(subprocess.check_output(['id','-un']).decode().strip())")@company.com"
-# 或从 LDAP/AD 查询真实邮箱
-bash /path/to/install.sh
-```
-
-**Windows（Intune / GPO）**
-
-1. 将 `cursor_hook.py` 和 `install.ps1` 放到共享路径（如 `\\fileserver\cursor-hook\`）。
-2. 创建 PowerShell 脚本策略：
-
-```powershell
-$env:COLLECTOR_URL = "http://your-server:8000"
-$env:USER_EMAIL    = "$env:USERNAME@company.com"
-& "\\fileserver\cursor-hook\install.ps1"
-```
-
-### Hook 配置说明
-
-安装后，每台机器的 `~/.cursor/hooks.json` 会指向 Java JAR：
-
-```json
-{
-  "version": 1,
-  "hooks": {
-    "beforeSubmitPrompt": [
-      { "command": "java -jar ~/.cursor/hooks/cursor_hook.jar" }
-    ],
-    "stop": [
-      { "command": "java -jar ~/.cursor/hooks/cursor_hook.jar" }
-    ]
-  }
-}
-```
-
-- `beforeSubmitPrompt`：仅在本地记录会话开始时间（不上报，不消耗 token）。
-- `stop`：会话结束时上报 1 条记录（workspace_roots + 时长），HTTP POST 到采集服务。
-- 要求本机已安装 **JRE 11+**（`java -version` 可验证）。
-- 若个别机器无 Java，可改用同目录下的 `cursor_hook.py`（Python 3），将 `hooks.json` 中的命令改为 `python3 ~/.cursor/hooks/cursor_hook.py`，行为与 JAR 一致。
 
 ### 验证 Hook 是否生效
 
 ```bash
-# macOS/Linux
 echo '{"hook_event_name":"stop","conversation_id":"test-123","workspace_roots":["/tmp/test"]}' \
-  | java -jar ~/.cursor/hooks/cursor_hook.jar
+  | python3 .cursor/hook/cursor_hook.py
 ```
 
-应输出 `{"continue":true}` 且采集服务日志中出现对应记录。
+应输出 `{"continue":true}` 且 Collector 日志中出现对应记录。
 
 ---
 
@@ -283,6 +247,7 @@ cursor-admin/
 ├── collector/            # 采集服务（Python / FastAPI）
 │   ├── main.py           # 入口：HTTP API + 定时任务
 │   ├── sync.py           # 从 Cursor Admin API 同步数据
+│   ├── git_sync.py       # Git 仓库贡献采集（定时 clone/fetch → git log）
 │   ├── alerts.py         # 告警检测与通知
 │   ├── cursor_api.py     # Cursor API 客户端
 │   ├── database.py       # 数据库连接与迁移
@@ -292,20 +257,19 @@ cursor-admin/
 │   └── Dockerfile
 ├── db/
 │   └── migrations/
-│       └── 001_init.sql  # 数据库 Schema（幂等）
-├── hook/                 # 客户端 Hook（Java，部署到成员机器）
-│   ├── java/             # Maven 工程，构建 cursor_hook.jar
-│   │   ├── pom.xml
-│   │   └── src/main/java/com/cursor/hook/CursorHook.java
+│       ├── 001_init.sql      # 基础 Schema（幂等）
+│       └── 002_projects.sql  # 项目立项 + Git 贡献表
+├── hook/                 # Hook 模板与全局安装脚本
+│   ├── cursor_hook.py    # Python Hook 脚本（模板）
 │   ├── hook_config.json  # 配置模板
 │   ├── hooks.json        # Cursor hooks.json 模板
-│   ├── install.sh        # macOS/Linux 安装脚本
-│   └── install.ps1       # Windows 安装脚本
-└── web/                  # 管理端（React / Vite / Tailwind）
+│   ├── install.sh        # macOS/Linux 全局安装脚本
+│   └── install.ps1       # Windows 全局安装脚本
+└── web/                  # 管理端 + 成员端（React / Vite / Tailwind）
     ├── src/
     │   ├── api/client.ts # API 客户端 + 类型定义
-    │   ├── components/   # Layout
-    │   ├── pages/        # 用量/工作目录/支出/告警/历史
+    │   ├── components/   # Layout、共享组件
+    │   ├── pages/        # 项目管理/用量/贡献/支出/告警/我的项目
     │   └── App.tsx
     ├── nginx.conf
     └── Dockerfile

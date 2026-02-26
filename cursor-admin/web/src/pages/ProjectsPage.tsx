@@ -418,8 +418,9 @@ export default function ProjectsPage() {
                   !(form as FormState & { _wr?: string })._wr?.trim() ||
                   (!form.id && !form.created_by?.trim()) ||
                   (!form.id &&
-                    (((form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_gitlab' || (form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_github') &&
-                    !(form as FormState & { _repoSlug?: string })._repoSlug?.trim())
+                    ((form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_gitlab' ||
+                      (form as FormState & { _createRepoMode?: string })._createRepoMode === 'auto_github') &&
+                    !(form as FormState & { _repoSlug?: string })._repoSlug?.trim()))
                 }
                 className="flex items-center gap-2 px-4 py-2 text-sm bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:pointer-events-none"
               >

@@ -43,7 +43,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
-| cursor-admin-projects | 2026-02-26 | 27 | 25（C1–C5 + Task 1–6 + Task 7–10 + Task 12–14 + Task 19–27） | 0 | 2 | 无 |
+| cursor-admin-projects | 2026-02-26 | 27 | 26（C1–C5 + Task 1–6 + Task 7–10 + Task 12–15 + Task 19–27） | 0 | 1 | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 0 | 0 | 15 | 依赖 projects |
 
 ### cursor-admin-projects 当前进度明细
@@ -52,12 +52,13 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 - Phase -1（遗留清理）：C1–C5 全部完成
 - Phase 0-A（数据模型与 CRUD）：Task 1–6 已完成（迁移、CRUD API、白名单、管理端页面、API client、导航）
 - Phase 0-B（Hook 白名单校验）：Task 7、8、9、10 已完成（Python 实现 + 服务端补填）
-- Phase 0-C：Task 12（contributions API）、Task 13（summary API）、Task 14（项目详情页）已完成
+- Phase 0-C：Task 12–14 已完成（contributions/summary API、项目详情页）
+- Phase 0-D：Task 15（/api/contributions/my）已完成
 - Phase 0-E：Task 19–27 已完成（含 E2E 验证清单 `E2E_VERIFICATION.md`）
 
 **下一批次（建议优先级）**：
 1. Task 11：Git 采集定时任务
-2. Task 15–18：成员端贡献 API、我的项目视图、工作目录改造、E2E 验证
+2. Task 16–18：我的项目视图、工作目录改造、E2E 验证
 
 ---
 

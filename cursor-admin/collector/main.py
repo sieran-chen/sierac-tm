@@ -696,6 +696,55 @@ async def reinject_hook(request: Request, project_id: int):
     return {"ok": True, "message": "Hook files re-injected."}
 
 
+# ─── 成员端：我的贡献 ──────────────────────────────────────────────────────────
+
+
+@app.get("/api/contributions/my", dependencies=[Depends(require_api_key)])
+async def get_my_contributions(
+    email: str = Query(..., description="Current user email"),
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+):
+    """Contributions for the given user across all active projects (member-facing)."""
+    pool = await get_pool()
+    conditions = ["g.author_email = $1", "p.status = 'active'"]
+    params: list = [email]
+    idx = 2
+    if start:
+        conditions.append(f"g.commit_date >= ${idx}")
+        params.append(date.fromisoformat(start))
+        idx += 1
+    if end:
+        conditions.append(f"g.commit_date <= ${idx}")
+        params.append(date.fromisoformat(end))
+        idx += 1
+    where = " AND ".join(conditions)
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT g.project_id, p.name AS project_name, g.commit_date, g.commit_count,
+                   g.lines_added, g.lines_removed, g.files_changed
+            FROM git_contributions g
+            JOIN projects p ON p.id = g.project_id
+            WHERE {where}
+            ORDER BY g.commit_date DESC, g.project_id
+            """,
+            *params,
+        )
+    return [
+        {
+            "project_id": r["project_id"],
+            "project_name": r["project_name"],
+            "commit_date": r["commit_date"].isoformat() if hasattr(r["commit_date"], "isoformat") else str(r["commit_date"]),
+            "commit_count": r["commit_count"],
+            "lines_added": r["lines_added"],
+            "lines_removed": r["lines_removed"],
+            "files_changed": r["files_changed"],
+        }
+        for r in rows
+    ]
+
+
 # ─── 健康检查 ─────────────────────────────────────────────────────────────────
 
 

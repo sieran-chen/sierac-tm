@@ -124,3 +124,10 @@ def test_api_projects_summary_404_when_project_missing(client):
     """GET /api/projects/{id}/summary returns 404 when project not found."""
     r = client.get("/api/projects/999/summary")
     assert r.status_code == 404
+
+
+def test_api_contributions_my_returns_list(client):
+    """GET /api/contributions/my?email= returns list (member-facing)."""
+    r = client.get("/api/contributions/my?email=user%40company.com")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)

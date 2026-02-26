@@ -75,3 +75,19 @@ def test_api_alerts_events_returns_list(client):
     r = client.get("/api/alerts/events")
     assert r.status_code == 200
     assert isinstance(r.json(), list)
+
+
+def test_api_projects_returns_list(client):
+    r = client.get("/api/projects")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+
+def test_api_projects_whitelist_no_auth(app_with_mocked_db):
+    """Whitelist is public (no API key) for Hook."""
+    r = TestClient(app_with_mocked_db).get("/api/projects/whitelist")
+    assert r.status_code == 200
+    data = r.json()
+    assert "version" in data
+    assert "rules" in data
+    assert isinstance(data["rules"], list)

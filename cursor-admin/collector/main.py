@@ -328,6 +328,160 @@ async def list_alert_events(limit: int = Query(50, ge=1, le=500)):
     return [dict(r) for r in rows]
 
 
+# ─── 项目 CRUD（管理端） ───────────────────────────────────────────────────────
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: str = ""
+    workspace_rules: list[str]
+    member_emails: list[str] = []
+    created_by: str
+    git_repos: list[str] = []
+    auto_create_repo: bool = False
+    repo_slug: str | None = None
+
+
+class ProjectUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    git_repos: list[str] | None = None
+    workspace_rules: list[str] | None = None
+    member_emails: list[str] | None = None
+    status: str | None = None
+
+
+@app.get("/api/projects", dependencies=[Depends(require_api_key)])
+async def list_projects(status: str | None = Query(None)):
+    """List projects; optional ?status=active to filter."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        if status:
+            rows = await conn.fetch(
+                "SELECT * FROM projects WHERE status=$1 ORDER BY id",
+                status,
+            )
+        else:
+            rows = await conn.fetch("SELECT * FROM projects ORDER BY id")
+    return [dict(r) for r in rows]
+
+
+@app.post("/api/projects", dependencies=[Depends(require_api_key)])
+async def create_project(body: ProjectCreate):
+    """Create project. GitLab auto-create is Task 23; for now only manual git_repos."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO projects (name, description, git_repos, workspace_rules, member_emails, created_by)
+            VALUES ($1,$2,$3,$4,$5,$6) RETURNING *
+            """,
+            body.name,
+            body.description,
+            body.git_repos,
+            body.workspace_rules,
+            body.member_emails,
+            body.created_by,
+        )
+    return dict(row)
+
+
+@app.get("/api/projects/whitelist")
+async def get_projects_whitelist():
+    """Return active projects' workspace rules for Hook whitelist check (no API key)."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, name, workspace_rules, member_emails, updated_at
+            FROM projects WHERE status='active' ORDER BY id
+            """
+        )
+    if not rows:
+        version = ""
+        rules = []
+    else:
+        latest = max(r["updated_at"] for r in rows)
+        version = latest.isoformat().replace("+00:00", "Z") if hasattr(latest, "isoformat") else str(latest)
+        rules = [
+            {
+                "project_id": r["id"],
+                "project_name": r["name"],
+                "workspace_rules": list(r["workspace_rules"] or []),
+                "member_emails": list(r["member_emails"] or []),
+            }
+            for r in rows
+        ]
+    return {"version": version, "rules": rules}
+
+
+@app.get("/api/projects/{project_id}", dependencies=[Depends(require_api_key)])
+async def get_project(project_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return dict(row)
+
+
+@app.put("/api/projects/{project_id}", dependencies=[Depends(require_api_key)])
+async def update_project(project_id: int, body: ProjectUpdate):
+    pool = await get_pool()
+    updates: list[str] = []
+    params: list = []
+    idx = 1
+    if body.name is not None:
+        updates.append(f"name=${idx}")
+        params.append(body.name)
+        idx += 1
+    if body.description is not None:
+        updates.append(f"description=${idx}")
+        params.append(body.description)
+        idx += 1
+    if body.git_repos is not None:
+        updates.append(f"git_repos=${idx}")
+        params.append(body.git_repos)
+        idx += 1
+    if body.workspace_rules is not None:
+        updates.append(f"workspace_rules=${idx}")
+        params.append(body.workspace_rules)
+        idx += 1
+    if body.member_emails is not None:
+        updates.append(f"member_emails=${idx}")
+        params.append(body.member_emails)
+        idx += 1
+    if body.status is not None:
+        updates.append(f"status=${idx}")
+        params.append(body.status)
+        idx += 1
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    updates.append("updated_at=NOW()")
+    params.append(project_id)
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            f"UPDATE projects SET {', '.join(updates)} WHERE id=${idx} RETURNING *",
+            *params,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return dict(row)
+
+
+@app.delete("/api/projects/{project_id}", dependencies=[Depends(require_api_key)], status_code=204)
+async def archive_project(project_id: int):
+    """Soft delete: set status to archived."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        result = await conn.execute(
+            "UPDATE projects SET status='archived', updated_at=NOW() WHERE id=$1",
+            project_id,
+        )
+    if result == "UPDATE 0":
+        raise HTTPException(status_code=404, detail="Project not found")
+
+
 # ─── 健康检查 ─────────────────────────────────────────────────────────────────
 
 

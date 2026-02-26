@@ -3,10 +3,17 @@ Shared fixtures for collector tests.
 Uses mocks for DB and Cursor API so tests do not require real PostgreSQL or Cursor.
 """
 import asyncio
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# Ensure collector root is on path so "main", "database", etc. can be imported
+_collector_root = Path(__file__).resolve().parent.parent
+if str(_collector_root) not in sys.path:
+    sys.path.insert(0, str(_collector_root))
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 # Tasks: 项目立项与治理
 
 > **Spec**: cursor-admin-projects  
-> **状态**: 实施中  
+> **状态**: 已完成（Phase 0 全部任务）  
 > **最后更新**: 2026-02-26
 
 ---
@@ -42,7 +42,7 @@
 
 ## Phase 0-C：Git 采集与按项目聚合
 
-- [ ] **Task 11**：Collector 新增 Git 采集定时任务（clone/fetch → git log → git diff → upsert git_contributions）
+- [x] **Task 11**：Collector 新增 Git 采集定时任务（clone/fetch → git log → git diff → upsert git_contributions）
 - [x] **Task 12**：Collector 新增 `/api/projects/{id}/contributions` 查询 API
 - [x] **Task 13**：Collector 新增 `/api/projects/{id}/summary` 汇总 API（成本 + 贡献 + 参与人）
 - [x] **Task 14**：管理端新增「项目详情」页面（成本面板、贡献面板、参与面板）
@@ -52,7 +52,7 @@
 - [x] **Task 15**：Collector 新增 `/api/contributions/my` API（按当前用户查询所有项目贡献）
 - [x] **Task 16**：管理端新增「我的项目」视图（成员参与的项目列表 + 各项目贡献摘要）
 - [x] **Task 17**：原「工作目录」页改造为按项目聚合视图（未归属会话显示为「未归属」）
-- [ ] **Task 18**：端到端验证：立项 → Hook 拦截 → 放行 → 上报归属 → Git 采集 → 管理端展示
+- [x] **Task 18**：端到端验证：立项 → Hook 拦截 → 放行 → 上报归属 → Git 采集 → 管理端展示
 
 ## Phase 0-E：GitLab 仓库自动化
 

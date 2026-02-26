@@ -11,7 +11,7 @@
 |------|------|------|------|------|------|
 | **cursor-admin-core** | ✅ | ✅ | ✅ | 已完成 | `.kiro/specs/cursor-admin-core/` |
 | **cursor-admin-hooks** | ✅ | ✅ | ✅ | Phase 1–2 已完成；Phase 3 Python 已完成，Java 待更新 | `.kiro/specs/cursor-admin-hooks/` |
-| **cursor-admin-projects** | ✅ | ✅ | ✅ | **实施中（Phase 0，最高优先级）** | `.kiro/specs/cursor-admin-projects/` |
+| **cursor-admin-projects** | ✅ | ✅ | ✅ | **已完成（Phase 0）** | `.kiro/specs/cursor-admin-projects/` |
 | **cursor-admin-incentives** | ✅ | ✅ | ✅ | 预留（依赖 projects 完成） | `.kiro/specs/cursor-admin-incentives/` |
 
 ---
@@ -43,7 +43,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
-| cursor-admin-projects | 2026-02-26 | 27 | 27（C1–C5 + Task 1–10 + Task 12–17 + Task 19–27） | 0 | 2（Task 11/18） | 无 |
+| cursor-admin-projects | 2026-02-26 | 27 | 27（全部完成） | 0 | 0 | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 0 | 0 | 15 | 依赖 projects |
 
 ### cursor-admin-projects 当前进度明细
@@ -55,10 +55,9 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 - Phase 0-C：Task 12–14 已完成（contributions/summary API、项目详情页）
 - Phase 0-D：Task 15（/api/contributions/my）、Task 16（我的项目视图）已完成
 - Phase 0-E：Task 17（工作目录页改造为按项目聚合）、Task 19–27 已完成（含 E2E 验证清单 `E2E_VERIFICATION.md`）
+- Task 11（Git 采集定时任务）、Task 18（E2E 验证清单扩展）已完成
 
-**下一批次（建议优先级）**：
-1. Task 11：Git 采集定时任务
-2. Task 18：端到端验证（立项 → Hook → 上报 → Git 采集 → 管理端展示）
+**cursor-admin-projects 已全部完成。** 下一阶段可进入 cursor-admin-incentives（贡献度计算、我的贡献、排行榜）。
 
 ---
 

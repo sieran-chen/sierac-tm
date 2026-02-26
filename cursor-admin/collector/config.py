@@ -42,5 +42,9 @@ class Settings(BaseSettings):
     gitlab_default_branch: str = "main"
     gitlab_visibility: str = "private"
 
+    # Git 采集（定时扫描项目仓库，写入 git_contributions）
+    git_repos_root: str = "/data/git-repos"
+    git_collect_days: int = 3
+
 
 settings = Settings()

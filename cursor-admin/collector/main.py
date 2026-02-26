@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from alerts import check_alerts
 from config import settings
 from database import close_pool, get_pool, init_db
+from git_collector import run_git_collect
 from sync import run_full_sync
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -48,6 +49,10 @@ async def lifespan(app: FastAPI):
 async def _sync_and_alert():
     await run_full_sync()
     await check_alerts()
+    try:
+        await run_git_collect()
+    except Exception as e:
+        log.exception("Git collect failed: %s", e)
 
 
 app = FastAPI(title="Cursor Admin Collector", lifespan=lifespan)
@@ -266,6 +271,49 @@ async def sessions_summary(
             end_date,
         )
     return [dict(r) for r in rows]
+
+
+@app.get("/api/sessions/summary-by-project", dependencies=[Depends(require_api_key)])
+async def sessions_summary_by_project(
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+):
+    """按用户 + 项目聚合：会话数、总时长；project_id 为空时显示为「未归属」。"""
+    pool = await get_pool()
+    start_date = date.fromisoformat(start) if start else date.today() - timedelta(days=30)
+    end_date = date.fromisoformat(end) if end else date.today()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT
+                a.project_id,
+                COALESCE(p.name, '未归属') AS project_name,
+                a.user_email,
+                COUNT(*) AS session_count,
+                COALESCE(SUM(a.duration_seconds), 0)::bigint AS total_seconds,
+                MIN(a.ended_at) AS first_seen,
+                MAX(a.ended_at) AS last_seen
+            FROM agent_sessions a
+            LEFT JOIN projects p ON p.id = a.project_id
+            WHERE a.ended_at::date BETWEEN $1 AND $2
+            GROUP BY a.project_id, p.name, a.user_email
+            ORDER BY project_name, a.user_email, total_seconds DESC
+            """,
+            start_date,
+            end_date,
+        )
+    return [
+        {
+            "project_id": r["project_id"],
+            "project_name": r["project_name"],
+            "user_email": r["user_email"],
+            "session_count": r["session_count"],
+            "total_seconds": r["total_seconds"],
+            "first_seen": r["first_seen"].isoformat() if r["first_seen"] and hasattr(r["first_seen"], "isoformat") else (str(r["first_seen"]) if r["first_seen"] else None),
+            "last_seen": r["last_seen"].isoformat() if r["last_seen"] and hasattr(r["last_seen"], "isoformat") else (str(r["last_seen"]) if r["last_seen"] else None),
+        }
+        for r in rows
+    ]
 
 
 # ─── 告警规则 CRUD ─────────────────────────────────────────────────────────────

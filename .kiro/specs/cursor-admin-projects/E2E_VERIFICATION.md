@@ -1,6 +1,7 @@
-# 端到端验证：立项 → GitLab 仓库 → Hook 注入 → 上报归属
+# 端到端验证：立项 → Hook → 上报归属 → Git 采集 → 管理端展示
 
-> 对应 Task 27。按下列步骤在真实环境验证完整流程。
+> **Task 27**：立项 → GitLab 仓库 → Hook 注入 → 上报归属（见下文步骤 1–7）。  
+> **Task 18**：在上述基础上增加 Git 采集与管理端展示（见步骤 8–9）。
 
 ## 前置条件
 
@@ -40,9 +41,24 @@
    - 点击重试图标，调用 `POST /api/projects/{id}/reinject-hook`
    - 再次在 GitLab 查看默认分支最新提交，应包含 Hook 文件更新
 
+8. **Git 采集（Task 18）**
+   - 项目已填写 `git_repos`（自动创建时已回填；或手动关联已有仓库）
+   - Collector 配置 `GIT_REPOS_ROOT`（可选，默认 `/data/git-repos`）、`GIT_COLLECT_DAYS`（可选，默认 3）
+   - 等待定时任务执行（与 sync 同周期，默认每小时），或重启 Collector 触发首次 sync + 采集
+   - 在项目仓库内产生近期 commit（3 天内），再次等待采集周期或重启
+   - 查询 DB：`SELECT * FROM git_contributions WHERE project_id = <id>;` 应有按 author_email、commit_date 的汇总行
+
+9. **管理端展示（Task 18）**
+   - 管理端 → 项目 → 进入该项目详情页
+   - 成本面板：应显示该项目关联的会话数、时长
+   - 参与面板：应显示参与成员及各自会话摘要
+   - 贡献面板：应显示 Git 贡献（按成员、按日）；若尚未有采集数据则为空
+   - 项目参与页（原工作目录页）：汇总视图应出现该项目及成员；明细视图会话应带项目名或「未归属」
+
 ## 通过标准
 
 - 立项后 GitLab 仓库与 clone 地址可见
 - Hook 文件存在于仓库且配置正确
 - 白名单目录放行、非白名单拦截
 - `agent_sessions.project_id` 正确关联项目
+- （Task 18）Git 采集定时任务运行后，`git_contributions` 有数据；管理端项目详情、项目参与页正确展示

@@ -54,9 +54,58 @@ export const api = {
     request<void>(`/alerts/rules/${id}`, { method: 'DELETE' }),
 
   alertEvents: (limit = 50) => request<AlertEvent[]>(`/alerts/events?limit=${limit}`),
+
+  projects: (params?: { status?: string }) => {
+    const q = params?.status ? `?status=${encodeURIComponent(params.status)}` : ''
+    return request<Project[]>(`/projects${q}`)
+  },
+  project: (id: number) => request<Project>(`/projects/${id}`),
+  createProject: (body: ProjectCreate) =>
+    request<Project>('/projects', { method: 'POST', body: JSON.stringify(body) }),
+  updateProject: (id: number, body: ProjectUpdate) =>
+    request<Project>(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  archiveProject: (id: number) =>
+    request<void>(`/projects/${id}`, { method: 'DELETE' }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface Project {
+  id: number
+  name: string
+  description: string
+  git_repos: string[]
+  workspace_rules: string[]
+  member_emails: string[]
+  status: string
+  gitlab_project_id: number | null
+  repo_url: string
+  repo_ssh_url: string
+  hook_initialized: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProjectCreate {
+  name: string
+  description?: string
+  workspace_rules: string[]
+  member_emails?: string[]
+  created_by: string
+  git_repos?: string[]
+  auto_create_repo?: boolean
+  repo_slug?: string
+}
+
+export interface ProjectUpdate {
+  name?: string
+  description?: string
+  git_repos?: string[]
+  workspace_rules?: string[]
+  member_emails?: string[]
+  status?: string
+}
 
 export interface Member {
   id: number

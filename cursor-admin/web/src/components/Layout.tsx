@@ -1,9 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { BarChart2, Clock, Bell, Users, AlertTriangle } from 'lucide-react'
+import { BarChart2, FolderGit2, Bell, Users, AlertTriangle } from 'lucide-react'
 
 const nav = [
   { to: '/',          label: '用量总览',   icon: BarChart2 },
-  { to: '/workspace', label: '工作目录',   icon: Clock },
+  { to: '/projects',  label: '项目',       icon: FolderGit2 },
   { to: '/spend',     label: '支出管理',   icon: Users },
   { to: '/alerts',    label: '告警配置',   icon: Bell },
   { to: '/events',    label: '告警历史',   icon: AlertTriangle },

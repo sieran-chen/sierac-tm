@@ -29,9 +29,9 @@
 - [x] **Task 1**：创建 `002_projects.sql` 迁移文件（projects 表、git_contributions 表、agent_sessions 扩展 project_id）
 - [x] **Task 2**：Collector 新增项目 CRUD API（`/api/projects` GET/POST/PUT/DELETE）
 - [x] **Task 3**：Collector 新增白名单查询 API（`GET /api/projects/whitelist`）
-- [ ] **Task 4**：管理端新增「项目管理」页面（列表、新建/编辑弹窗、归档）
-- [ ] **Task 5**：管理端 API client 新增 projects 相关类型与方法
-- [ ] **Task 6**：管理端导航：新增「项目」入口，替代原「工作目录」
+- [x] **Task 4**：管理端新增「项目管理」页面（列表、新建/编辑弹窗、归档）
+- [x] **Task 5**：管理端 API client 新增 projects 相关类型与方法
+- [x] **Task 6**：管理端导航：新增「项目」入口，替代原「工作目录」
 
 ## Phase 0-B：Hook 白名单校验
 

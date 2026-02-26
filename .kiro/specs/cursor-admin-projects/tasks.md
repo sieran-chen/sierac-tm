@@ -38,7 +38,7 @@
 - [x] **Task 7**：Hook 脚本增加白名单缓存与刷新逻辑（whitelist_cache.json，5 分钟 TTL）
 - [x] **Task 8**：Hook `beforeSubmitPrompt` 增加白名单校验（匹配 → continue，不匹配 → 拦截 + 提示）
 - [x] **Task 9**：Hook `stop` 上报增加 `project_id` 字段（从 beforeSubmitPrompt 匹配结果传递）
-- [ ] **Task 10**：Collector `POST /api/sessions` 接收 project_id；若无则根据 workspace_rules 补填
+- [x] **Task 10**：Collector `POST /api/sessions` 接收 project_id；若无则根据 workspace_rules 补填
 
 ## Phase 0-C：Git 采集与按项目聚合
 

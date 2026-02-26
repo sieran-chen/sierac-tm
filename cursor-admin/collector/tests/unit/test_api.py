@@ -53,6 +53,21 @@ def test_api_sessions_post_accepts_valid_payload(app_with_mocked_db):
     assert r.status_code == 204
 
 
+def test_api_sessions_post_accepts_project_id(app_with_mocked_db):
+    """POST /api/sessions accepts optional project_id from Hook."""
+    body = {
+        "event": "session_end",
+        "conversation_id": "conv-2",
+        "user_email": "u@x.com",
+        "workspace_roots": ["/path/to/proj"],
+        "ended_at": 1709308800,
+        "duration_seconds": 60,
+        "project_id": 1,
+    }
+    r = TestClient(app_with_mocked_db).post("/api/sessions", json=body)
+    assert r.status_code == 204
+
+
 def test_api_usage_daily_returns_list(client):
     r = client.get("/api/usage/daily")
     assert r.status_code == 200

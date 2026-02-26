@@ -43,7 +43,7 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
 | cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
-| cursor-admin-projects | 2026-02-26 | 27 | 14（C1–C5 + Task 1–6 + Task 7–9 + Task 20–21） | 0 | 13 | 无 |
+| cursor-admin-projects | 2026-02-26 | 27 | 15（C1–C5 + Task 1–6 + Task 7–10 + Task 20–21） | 0 | 12 | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 0 | 0 | 15 | 依赖 projects |
 
 ### cursor-admin-projects 当前进度明细
@@ -51,12 +51,12 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 **已完成**：
 - Phase -1（遗留清理）：C1–C5 全部完成
 - Phase 0-A（数据模型与 CRUD）：Task 1–6 已完成（迁移、CRUD API、白名单、管理端页面、API client、导航）
-- Phase 0-B（Hook 白名单校验）：Task 7、8、9 已完成（Python 实现）
+- Phase 0-B（Hook 白名单校验）：Task 7、8、9、10 已完成（Python 实现 + 服务端补填）
 - Phase 0-E（GitLab 自动化）：Task 20（gitlab_client.py）、Task 21（hook_templates/）已完成
 
 **下一批次（建议优先级）**：
-1. Task 10：Collector `POST /api/sessions` 接收 project_id + 自动补填
-2. Task 19–27：GitLab 配置与自动化、项目详情与贡献 API、端到端验证
+1. Task 19–27：GitLab 配置与自动化、项目详情与贡献 API、端到端验证
+2. Task 11–14：Git 采集、项目贡献/汇总 API、项目详情页
 
 ---
 

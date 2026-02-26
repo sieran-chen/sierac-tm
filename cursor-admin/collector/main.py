@@ -79,11 +79,38 @@ class SessionPayload(BaseModel):
     workspace_roots: list[str] = []
     ended_at: int
     duration_seconds: int | None = None
+    project_id: int | None = None
+
+
+def _workspace_root_matches_rule(root: str, rule: str) -> bool:
+    """Match root against rule (prefix). Normalize path separators and case for cross-platform."""
+    if not root or not rule:
+        return False
+    root_n = root.replace("\\", "/").strip().lower()
+    rule_n = rule.replace("\\", "/").strip().lower()
+    return root_n.startswith(rule_n)
+
+
+async def _resolve_project_id_from_workspace_roots(pool, workspace_roots: list[str]) -> int | None:
+    """Resolve project_id by matching workspace_roots against active projects' workspace_rules."""
+    if not workspace_roots:
+        return None
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT id, workspace_rules FROM projects WHERE status = 'active'"
+        )
+    for root in workspace_roots:
+        for r in rows:
+            rules = r["workspace_rules"] or []
+            for rule in rules:
+                if _workspace_root_matches_rule(root, rule):
+                    return r["id"]
+    return None
 
 
 @app.post("/api/sessions", status_code=204)
 async def receive_session(payload: SessionPayload):
-    """接收 Hook 上报的会话结束事件"""
+    """Receive Hook session end event. Accept project_id; if missing, resolve from workspace_rules."""
     from datetime import datetime, timezone
 
     pool = await get_pool()
@@ -94,12 +121,16 @@ async def receive_session(payload: SessionPayload):
             payload.ended_at - payload.duration_seconds, tz=timezone.utc
         )
 
+    project_id = payload.project_id
+    if project_id is None and payload.workspace_roots:
+        project_id = await _resolve_project_id_from_workspace_roots(pool, payload.workspace_roots)
+
     async with pool.acquire() as conn:
         await conn.execute(
             """
             INSERT INTO agent_sessions
-                (conversation_id, user_email, machine_id, workspace_roots, started_at, ended_at, duration_seconds)
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
+                (conversation_id, user_email, machine_id, workspace_roots, started_at, ended_at, duration_seconds, project_id)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
             ON CONFLICT (conversation_id) DO NOTHING
             """,
             payload.conversation_id,
@@ -109,6 +140,7 @@ async def receive_session(payload: SessionPayload):
             started_dt,
             ended_dt,
             payload.duration_seconds,
+            project_id,
         )
 
 

@@ -5,6 +5,8 @@ import ProjectsPage from './pages/ProjectsPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import MyProjectsPage from './pages/MyProjectsPage'
 import WorkspacePage from './pages/WorkspacePage'
+import LeaderboardPage from './pages/LeaderboardPage'
+import IncentiveRulesPage from './pages/IncentiveRulesPage'
 import SpendPage from './pages/SpendPage'
 import AlertsPage from './pages/AlertsPage'
 import EventsPage from './pages/EventsPage'
@@ -18,6 +20,8 @@ export default function App() {
         <Route path="projects/:id" element={<ProjectDetailPage />} />
         <Route path="my-projects" element={<MyProjectsPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
+        <Route path="leaderboard" element={<LeaderboardPage />} />
+        <Route path="incentive-rules" element={<IncentiveRulesPage />} />
         <Route path="spend" element={<SpendPage />} />
         <Route path="alerts" element={<AlertsPage />} />
         <Route path="events" element={<EventsPage />} />

@@ -76,13 +76,37 @@ export const api = {
     request<{ ok: boolean; message?: string }>(`/projects/${id}/reinject-hook`, { method: 'POST' }),
   projectSummary: (id: number) =>
     request<ProjectSummary>(`/projects/${id}/summary`),
-  myContributions: (params: { email: string; start?: string; end?: string }) => {
+  myContributions: (params: { email: string; start?: string; end?: string; period_type?: string; period_key?: string }) => {
     const q = new URLSearchParams()
     q.set('email', params.email)
     if (params.start) q.set('start', params.start)
     if (params.end) q.set('end', params.end)
-    return request<MyContributionRow[]>(`/contributions/my?${q}`)
+    if (params.period_type) q.set('period_type', params.period_type)
+    if (params.period_key) q.set('period_key', params.period_key)
+    return request<MyContributionRow[] | MyContributionScore>(`/contributions/my?${q}`)
   },
+
+  leaderboard: (params: { period_type: string; period_key: string; hook_only?: boolean }) => {
+    const q = new URLSearchParams()
+    q.set('period_type', params.period_type)
+    q.set('period_key', params.period_key)
+    if (params.hook_only !== undefined) q.set('hook_only', String(params.hook_only))
+    return request<LeaderboardResponse>(`/contributions/leaderboard?${q}`)
+  },
+
+  incentiveRules: (params?: { enabled_only?: boolean }) => {
+    const q = params?.enabled_only ? '?enabled_only=true' : ''
+    return request<IncentiveRule[]>(`/incentive-rules${q}`)
+  },
+  incentiveRule: (id: number) => request<IncentiveRule>(`/incentive-rules/${id}`),
+  createIncentiveRule: (body: IncentiveRuleCreate) =>
+    request<IncentiveRule>('/incentive-rules', { method: 'POST', body: JSON.stringify(body) }),
+  updateIncentiveRule: (id: number, body: IncentiveRuleUpdate) =>
+    request<IncentiveRule>(`/incentive-rules/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteIncentiveRule: (id: number) =>
+    request<void>(`/incentive-rules/${id}`, { method: 'DELETE' }),
+  recalculateIncentiveRule: (id: number) =>
+    request<{ ok: boolean; message?: string }>(`/incentive-rules/${id}/recalculate`, { method: 'POST' }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -246,4 +270,61 @@ export interface AlertEvent {
   metric_value: number
   threshold: number
   detail: Record<string, unknown>
+}
+
+// ─── Contributions / Incentives ───────────────────────────────────────────────
+
+export interface MyContributionScore {
+  user_email: string
+  period_type: string
+  period_key: string
+  hook_adopted: boolean
+  total_score: number
+  rank: number | null
+  score_breakdown: Record<string, number>
+  raw: { lines_added: number; commit_count: number; session_duration_hours: number; agent_requests: number; files_changed: number }
+  projects: { project_id: number; project_name: string; total_score: number }[]
+}
+
+export interface LeaderboardResponse {
+  period_type: string
+  period_key: string
+  generated_at: string | null
+  entries: LeaderboardEntry[]
+}
+
+export interface LeaderboardEntry {
+  rank: number | null
+  user_email: string
+  total_score: number
+  hook_adopted: boolean
+  lines_added: number
+  commit_count: number
+}
+
+export interface IncentiveRule {
+  id: number
+  name: string
+  period_type: string
+  weights: Record<string, number>
+  caps: Record<string, number>
+  enabled: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface IncentiveRuleCreate {
+  name: string
+  period_type?: string
+  weights: Record<string, number>
+  caps?: Record<string, number>
+  enabled?: boolean
+}
+
+export interface IncentiveRuleUpdate {
+  name?: string
+  period_type?: string
+  weights?: Record<string, number>
+  caps?: Record<string, number>
+  enabled?: boolean
 }

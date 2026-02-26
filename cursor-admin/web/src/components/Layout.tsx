@@ -1,13 +1,16 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { BarChart2, FolderGit2, UserCheck, Bell, Users, AlertTriangle } from 'lucide-react'
+import { BarChart2, FolderGit2, UserCheck, Bell, Users, AlertTriangle, Trophy, Settings } from 'lucide-react'
 
 const nav = [
-  { to: '/',           label: '用量总览',   icon: BarChart2 },
-  { to: '/projects',   label: '项目',       icon: FolderGit2 },
-  { to: '/my-projects', label: '我的项目',  icon: UserCheck },
-  { to: '/spend',      label: '支出管理',   icon: Users },
-  { to: '/alerts',     label: '告警配置',   icon: Bell },
-  { to: '/events',     label: '告警历史',   icon: AlertTriangle },
+  { to: '/',             label: '用量总览',   icon: BarChart2 },
+  { to: '/projects',     label: '项目',       icon: FolderGit2 },
+  { to: '/my-projects',  label: '我的项目',  icon: UserCheck },
+  { to: '/workspace',    label: '项目参与',   icon: FolderGit2 },
+  { to: '/leaderboard',  label: '排行榜',     icon: Trophy },
+  { to: '/incentive-rules', label: '激励规则', icon: Settings },
+  { to: '/spend',        label: '支出管理',   icon: Users },
+  { to: '/alerts',       label: '告警配置',   icon: Bell },
+  { to: '/events',       label: '告警历史',   icon: AlertTriangle },
 ]
 
 export default function Layout() {

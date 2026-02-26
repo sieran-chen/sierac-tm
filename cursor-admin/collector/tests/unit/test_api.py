@@ -112,3 +112,15 @@ def test_api_projects_reinject_hook_404_when_project_missing(client):
     """POST /api/projects/{id}/reinject-hook returns 404 when project not found."""
     r = client.post("/api/projects/999/reinject-hook")
     assert r.status_code == 404
+
+
+def test_api_projects_contributions_404_when_project_missing(client):
+    """GET /api/projects/{id}/contributions returns 404 when project not found."""
+    r = client.get("/api/projects/999/contributions")
+    assert r.status_code == 404
+
+
+def test_api_projects_summary_404_when_project_missing(client):
+    """GET /api/projects/{id}/summary returns 404 when project not found."""
+    r = client.get("/api/projects/999/summary")
+    assert r.status_code == 404

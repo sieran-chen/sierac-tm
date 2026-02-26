@@ -43,8 +43,8 @@
 ## Phase 0-C：Git 采集与按项目聚合
 
 - [ ] **Task 11**：Collector 新增 Git 采集定时任务（clone/fetch → git log → git diff → upsert git_contributions）
-- [ ] **Task 12**：Collector 新增 `/api/projects/{id}/contributions` 查询 API
-- [ ] **Task 13**：Collector 新增 `/api/projects/{id}/summary` 汇总 API（成本 + 贡献 + 参与人）
+- [x] **Task 12**：Collector 新增 `/api/projects/{id}/contributions` 查询 API
+- [x] **Task 13**：Collector 新增 `/api/projects/{id}/summary` 汇总 API（成本 + 贡献 + 参与人）
 - [ ] **Task 14**：管理端新增「项目详情」页面（成本面板、贡献面板、参与面板）
 
 ## Phase 0-D：成员端与收尾
@@ -64,7 +64,7 @@
 - [x] **Task 24**：新增 `POST /api/projects/{id}/reinject-hook` API（向已有仓库重新注入 Hook 文件）
 - [x] **Task 25**：管理端「新建项目」弹窗增加仓库创建方式选择（自动创建 / 关联已有）、仓库 slug 输入、结果展示（clone 地址一键复制）
 - [x] **Task 26**：管理端项目列表增加仓库状态列（已创建 / 未创建 / 创建失败）和「重试」按钮
-- [ ] **Task 27**：端到端验证：立项 → GitLab 仓库创建 → Hook 注入 → 成员 clone → Hook 生效 → 上报归属
+- [x] **Task 27**：端到端验证：立项 → GitLab 仓库创建 → Hook 注入 → 成员 clone → Hook 生效 → 上报归属（验证清单见 `E2E_VERIFICATION.md`）
 
 ---
 

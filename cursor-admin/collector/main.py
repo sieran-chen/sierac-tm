@@ -499,6 +499,108 @@ async def get_project(project_id: int):
     return dict(row)
 
 
+@app.get("/api/projects/{project_id}/contributions", dependencies=[Depends(require_api_key)])
+async def get_project_contributions(
+    project_id: int,
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+):
+    """Git contributions for this project (by author, by date). Optional start/end date filter."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        exists = await conn.fetchval("SELECT 1 FROM projects WHERE id=$1", project_id)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Project not found")
+    conditions = ["project_id=$1"]
+    params: list = [project_id]
+    idx = 2
+    if start:
+        conditions.append(f"commit_date >= ${idx}")
+        params.append(date.fromisoformat(start))
+        idx += 1
+    if end:
+        conditions.append(f"commit_date <= ${idx}")
+        params.append(date.fromisoformat(end))
+        idx += 1
+    where = " AND ".join(conditions)
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT author_email, commit_date, commit_count, lines_added, lines_removed, files_changed
+            FROM git_contributions WHERE {where}
+            ORDER BY commit_date DESC, author_email
+            """,
+            *params,
+        )
+    return [
+        {
+            "author_email": r["author_email"],
+            "commit_date": r["commit_date"].isoformat() if hasattr(r["commit_date"], "isoformat") else str(r["commit_date"]),
+            "commit_count": r["commit_count"],
+            "lines_added": r["lines_added"],
+            "lines_removed": r["lines_removed"],
+            "files_changed": r["files_changed"],
+        }
+        for r in rows
+    ]
+
+
+@app.get("/api/projects/{project_id}/summary", dependencies=[Depends(require_api_key)])
+async def get_project_summary(project_id: int):
+    """Project summary: cost (session count, duration), participants, Git contributions."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        proj = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    async with pool.acquire() as conn:
+        cost_row = await conn.fetchrow(
+            """
+            SELECT COUNT(*) AS session_count, COALESCE(SUM(duration_seconds), 0)::bigint AS total_duration_seconds
+            FROM agent_sessions WHERE project_id=$1
+            """,
+            project_id,
+        )
+        participants = await conn.fetch(
+            """
+            SELECT user_email, COUNT(*) AS session_count, COALESCE(SUM(duration_seconds), 0)::bigint AS total_seconds
+            FROM agent_sessions WHERE project_id=$1 GROUP BY user_email ORDER BY total_seconds DESC
+            """,
+            project_id,
+        )
+        contributions = await conn.fetch(
+            """
+            SELECT author_email, commit_date, commit_count, lines_added, lines_removed, files_changed
+            FROM git_contributions WHERE project_id=$1 ORDER BY commit_date DESC, author_email
+            """,
+            project_id,
+        )
+    return {
+        "project": dict(proj),
+        "session_count": cost_row["session_count"] or 0,
+        "total_duration_seconds": cost_row["total_duration_seconds"] or 0,
+        "participants": [
+            {
+                "user_email": r["user_email"],
+                "session_count": r["session_count"],
+                "total_seconds": r["total_seconds"],
+            }
+            for r in participants
+        ],
+        "contributions": [
+            {
+                "author_email": r["author_email"],
+                "commit_date": r["commit_date"].isoformat() if hasattr(r["commit_date"], "isoformat") else str(r["commit_date"]),
+                "commit_count": r["commit_count"],
+                "lines_added": r["lines_added"],
+                "lines_removed": r["lines_removed"],
+                "files_changed": r["files_changed"],
+            }
+            for r in contributions
+        ],
+    }
+
+
 @app.put("/api/projects/{project_id}", dependencies=[Depends(require_api_key)])
 async def update_project(project_id: int, body: ProjectUpdate):
     pool = await get_pool()

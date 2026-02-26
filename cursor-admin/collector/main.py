@@ -556,6 +556,44 @@ async def archive_project(project_id: int):
         raise HTTPException(status_code=404, detail="Project not found")
 
 
+@app.post("/api/projects/{project_id}/reinject-hook", dependencies=[Depends(require_api_key)])
+async def reinject_hook(request: Request, project_id: int):
+    """Re-inject Hook files into the project's GitLab repository."""
+    from gitlab_client import GitLabError, gitlab_client
+
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("SELECT id, gitlab_project_id FROM projects WHERE id=$1", project_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if not row["gitlab_project_id"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Project has no GitLab repository; create one first or link an existing repo.",
+        )
+    if not gitlab_client.is_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="GitLab not configured; set GITLAB_URL, GITLAB_TOKEN, GITLAB_GROUP_ID.",
+        )
+    collector_url = str(request.base_url).rstrip("/")
+    try:
+        gitlab_client.inject_hook_files(
+            gitlab_project_id=row["gitlab_project_id"],
+            collector_url=collector_url,
+            project_id=project_id,
+        )
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
+                project_id,
+            )
+    except GitLabError as exc:
+        log.warning("Reinject hook failed for project %s: %s", project_id, exc)
+        raise HTTPException(status_code=502, detail=f"GitLab error: {exc!s}") from exc
+    return {"ok": True, "message": "Hook files re-injected."}
+
+
 # ─── 健康检查 ─────────────────────────────────────────────────────────────────
 
 

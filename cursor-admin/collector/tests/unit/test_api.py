@@ -106,3 +106,9 @@ def test_api_projects_whitelist_no_auth(app_with_mocked_db):
     assert "version" in data
     assert "rules" in data
     assert isinstance(data["rules"], list)
+
+
+def test_api_projects_reinject_hook_404_when_project_missing(client):
+    """POST /api/projects/{id}/reinject-hook returns 404 when project not found."""
+    r = client.post("/api/projects/999/reinject-hook")
+    assert r.status_code == 404

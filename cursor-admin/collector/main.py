@@ -33,10 +33,7 @@ scheduler = AsyncIOScheduler()
 async def lifespan(app: FastAPI):
     await init_db()
     await run_full_sync()
-    try:
-        await run_git_collect()
-    except Exception as e:
-        log.exception("Startup git collect failed: %s", e)
+    # Git collect runs in scheduler (_sync_and_alert) and via POST /api/admin/trigger-git-collect; not on startup to avoid long clone blocking serve
 
     scheduler.add_job(
         _sync_and_alert,
@@ -92,17 +89,6 @@ async def _sync_and_alert():
         await run_git_collect()
     except Exception as e:
         log.exception("Git collect failed: %s", e)
-
-
-@app.post("/api/admin/trigger-git-collect", status_code=200, dependencies=[Depends(require_api_key)])
-async def trigger_git_collect():
-    """Manually trigger Git collection for all active projects with git_repos. Use after adding/editing project repo URLs."""
-    try:
-        await run_git_collect()
-        return {"ok": True, "message": "Git collect completed"}
-    except Exception as e:
-        log.exception("Git collect failed: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 async def _job_contribution_daily():
@@ -1299,6 +1285,17 @@ async def recalculate_incentive_rule(rule_id: int):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.post("/api/admin/trigger-git-collect", status_code=200, dependencies=[Depends(require_api_key)])
+async def trigger_git_collect():
+    """Manually trigger Git collection for all active projects with git_repos."""
+    try:
+        await run_git_collect()
+        return {"ok": True, "message": "Git collect completed"}
+    except Exception as e:
+        log.exception("Git collect failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/health/loop", dependencies=[Depends(require_api_key)])

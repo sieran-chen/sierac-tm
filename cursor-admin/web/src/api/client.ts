@@ -94,6 +94,13 @@ export const api = {
     return request<LeaderboardResponse>(`/contributions/leaderboard?${q}`)
   },
 
+  /** Loop health: whether Hook has reported any sessions in the last N days. */
+  loopHealth: (params?: { days?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.days != null) q.set('days', String(params.days))
+    return request<LoopHealthResponse>(`/health/loop${q.toString() ? `?${q}` : ''}`)
+  },
+
   incentiveRules: (params?: { enabled_only?: boolean }) => {
     const q = params?.enabled_only ? '?enabled_only=true' : ''
     return request<IncentiveRule[]>(`/incentive-rules${q}`)
@@ -303,6 +310,15 @@ export interface LeaderboardEntry {
   hook_adopted: boolean
   lines_added: number
   commit_count: number
+}
+
+/** Loop health: whether Hook has reported sessions in the last N days. */
+export interface LoopHealthResponse {
+  loop_ok: boolean
+  days_checked: number
+  last_session_at: string | null
+  sessions_count_7d: number
+  members_with_sessions_7d: number
 }
 
 export interface IncentiveRule {

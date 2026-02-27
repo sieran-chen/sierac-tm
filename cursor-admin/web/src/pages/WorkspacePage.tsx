@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format, subDays } from 'date-fns'
-import { api, Member, SessionSummaryByProjectRow, SessionRow, SessionsResponse, Project } from '../api/client'
+import { api, Member, SessionSummaryByProjectRow, SessionRow, SessionsResponse, Project, LoopHealthResponse } from '../api/client'
 
 function fmt(d: Date) { return format(d, 'yyyy-MM-dd') }
 function fmtDuration(sec: number | null) {
@@ -22,18 +22,35 @@ export default function WorkspacePage() {
   const [end, setEnd] = useState(fmt(new Date()))
   const [page, setPage] = useState(1)
   const [tab, setTab] = useState<'summary' | 'detail'>('summary')
+  const [loadingSummary, setLoadingSummary] = useState(false)
+  const [loadingDetail, setLoadingDetail] = useState(false)
+  const [errorSummary, setErrorSummary] = useState<string | null>(null)
+  const [errorDetail, setErrorDetail] = useState<string | null>(null)
+  const [loopHealth, setLoopHealth] = useState<LoopHealthResponse | null>(null)
 
   useEffect(() => { api.members().then(setMembers) }, [])
   useEffect(() => { api.projects({ status: 'active' }).then(setProjects) }, [])
+  useEffect(() => {
+    api.loopHealth({ days: 7 }).then(setLoopHealth).catch(() => setLoopHealth(null))
+  }, [])
 
   useEffect(() => {
-    api.sessionsSummaryByProject({ start, end }).then(setSummaryByProject)
+    setLoadingSummary(true)
+    setErrorSummary(null)
+    api.sessionsSummaryByProject({ start, end })
+      .then(setSummaryByProject)
+      .catch((e) => { setErrorSummary((e as Error).message); setSummaryByProject([]) })
+      .finally(() => setLoadingSummary(false))
   }, [start, end])
 
   useEffect(() => {
     if (tab !== 'detail') return
+    setLoadingDetail(true)
+    setErrorDetail(null)
     api.sessions({ email: email || undefined, workspace: undefined, start, end, page })
       .then(setSessions)
+      .catch((e) => { setErrorDetail((e as Error).message); setSessions(null) })
+      .finally(() => setLoadingDetail(false))
   }, [tab, email, start, end, page])
 
   const projectNameById = new Map(projects.map((p) => [p.id, p.name]))
@@ -49,6 +66,15 @@ export default function WorkspacePage() {
       <p className="text-sm text-gray-600">
         按项目与成员汇总 Agent 会话；未关联项目的会话显示为「未归属」。
       </p>
+
+      {loopHealth && !loopHealth.loop_ok && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-medium">尚未检测到 Hook 上报</p>
+          <p className="mt-1 text-amber-800">
+            接通 Hook 后可查看项目参与、贡献得分与排行。请确保在已立项项目的工作目录下使用 Cursor 并安装 Hook，详见《数据可见性条件与排查》文档。
+          </p>
+        </div>
+      )}
 
       {/* 筛选 */}
       <div className="flex flex-wrap gap-3 items-end">
@@ -98,6 +124,13 @@ export default function WorkspacePage() {
         </div>
       </div>
 
+      {errorSummary && (
+        <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">汇总加载失败：{errorSummary}</div>
+      )}
+      {tab === 'detail' && errorDetail && (
+        <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">会话明细加载失败：{errorDetail}</div>
+      )}
+
       <div className="flex gap-2">
         {(['summary', 'detail'] as const).map((t) => (
           <button
@@ -112,7 +145,10 @@ export default function WorkspacePage() {
         ))}
       </div>
 
-      {tab === 'summary' && (
+      {tab === 'summary' && loadingSummary && (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500 text-sm">加载中…</div>
+      )}
+      {tab === 'summary' && !loadingSummary && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 text-sm font-medium text-gray-600">
             按项目 + 成员汇总
@@ -152,17 +188,25 @@ export default function WorkspacePage() {
                   <td colSpan={5} className="px-5 py-8 text-center">
                     <p className="text-gray-500 mb-1">暂无参与数据</p>
                     <p className="text-xs text-gray-400 max-w-md mx-auto">
-                      数据来自 Hook 上报的 agent_sessions（含 project_id）。未关联项目的会话会显示为「未归属」。
+                      数据来自 Hook 上报的 agent_sessions。若仅有「未归属」会话，请在对应项目工作目录下安装 Hook 并确保该项目已在「项目管理」立项，新产生的会话才会带上 project_id。
                     </p>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          {!loadingSummary && filteredSummary.length > 0 && filteredSummary.every((s) => s.project_name === '未归属') && (
+            <div className="px-5 py-3 bg-amber-50 border-t border-amber-100 text-sm text-amber-800">
+              当前会话均未关联到项目。请在「项目管理」中立项并填写工作目录规则，在对应目录下使用 Cursor 并安装 Hook，新会话才会归属到项目。
+            </div>
+          )}
         </div>
       )}
 
-      {tab === 'detail' && sessions && sessions.data.length === 0 && sessions.total === 0 && (
+      {tab === 'detail' && loadingDetail && (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500 text-sm">加载中…</div>
+      )}
+      {tab === 'detail' && !loadingDetail && sessions && sessions.data.length === 0 && sessions.total === 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-gray-500 mb-1">暂无会话明细</p>
           <p className="text-xs text-gray-400 max-w-md mx-auto">

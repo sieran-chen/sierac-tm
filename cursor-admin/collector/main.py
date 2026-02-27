@@ -9,6 +9,8 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 
+import asyncpg
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -891,31 +893,44 @@ async def get_my_contributions(
     """
     if period_type and period_key:
         pool = await get_pool()
-        async with pool.acquire() as conn:
-            agg = await conn.fetchrow(
-                """
-                SELECT hook_adopted, total_score, rank, score_breakdown,
-                       lines_added, lines_removed, commit_count, files_changed,
-                       session_duration_hours, agent_requests
-                FROM contribution_scores
-                WHERE user_email = $1 AND project_id IS NULL AND period_type = $2 AND period_key = $3
-                """,
-                email,
-                period_type,
-                period_key,
-            )
-            proj_rows = await conn.fetch(
-                """
-                SELECT c.project_id, p.name AS project_name, c.total_score
-                FROM contribution_scores c
-                JOIN projects p ON p.id = c.project_id
-                WHERE c.user_email = $1 AND c.period_type = $2 AND c.period_key = $3 AND c.project_id IS NOT NULL
-                ORDER BY c.total_score DESC
-                """,
-                email,
-                period_type,
-                period_key,
-            )
+        try:
+            async with pool.acquire() as conn:
+                agg = await conn.fetchrow(
+                    """
+                    SELECT hook_adopted, total_score, rank, score_breakdown,
+                           lines_added, lines_removed, commit_count, files_changed,
+                           session_duration_hours, agent_requests
+                    FROM contribution_scores
+                    WHERE user_email = $1 AND project_id IS NULL AND period_type = $2 AND period_key = $3
+                    """,
+                    email,
+                    period_type,
+                    period_key,
+                )
+                proj_rows = await conn.fetch(
+                    """
+                    SELECT c.project_id, p.name AS project_name, c.total_score
+                    FROM contribution_scores c
+                    JOIN projects p ON p.id = c.project_id
+                    WHERE c.user_email = $1 AND c.period_type = $2 AND c.period_key = $3 AND c.project_id IS NOT NULL
+                    ORDER BY c.total_score DESC
+                    """,
+                    email,
+                    period_type,
+                    period_key,
+                )
+        except asyncpg.UndefinedTableError:
+            return {
+                "user_email": email,
+                "period_type": period_type,
+                "period_key": period_key,
+                "hook_adopted": False,
+                "total_score": 0,
+                "rank": None,
+                "score_breakdown": {},
+                "raw": {"lines_added": 0, "commit_count": 0, "session_duration_hours": 0, "agent_requests": 0, "files_changed": 0},
+                "projects": [],
+            }
         if not agg:
             return {
                 "user_email": email,
@@ -1001,36 +1016,44 @@ async def get_leaderboard(
 ):
     """Leaderboard for the given period. hook_only=true (default) filters to members with Hook data."""
     pool = await get_pool()
-    async with pool.acquire() as conn:
-        if hook_only:
-            rows = await conn.fetch(
-                """
-                SELECT user_email, rank, total_score, hook_adopted,
-                       lines_added, commit_count, session_duration_hours, agent_requests, files_changed
-                FROM contribution_scores
-                WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL AND hook_adopted = TRUE
-                ORDER BY rank ASC NULLS LAST, total_score DESC
-                """,
+    try:
+        async with pool.acquire() as conn:
+            if hook_only:
+                rows = await conn.fetch(
+                    """
+                    SELECT user_email, rank, total_score, hook_adopted,
+                           lines_added, commit_count, session_duration_hours, agent_requests, files_changed
+                    FROM contribution_scores
+                    WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL AND hook_adopted = TRUE
+                    ORDER BY rank ASC NULLS LAST, total_score DESC
+                    """,
+                    period_type,
+                    period_key,
+                )
+            else:
+                rows = await conn.fetch(
+                    """
+                    SELECT user_email, rank, total_score, hook_adopted,
+                           lines_added, commit_count, session_duration_hours, agent_requests, files_changed
+                    FROM contribution_scores
+                    WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL
+                    ORDER BY rank ASC NULLS LAST, total_score DESC
+                    """,
+                    period_type,
+                    period_key,
+                )
+            snapshot = await conn.fetchrow(
+                "SELECT created_at FROM leaderboard_snapshots WHERE period_type = $1 AND period_key = $2",
                 period_type,
                 period_key,
             )
-        else:
-            rows = await conn.fetch(
-                """
-                SELECT user_email, rank, total_score, hook_adopted,
-                       lines_added, commit_count, session_duration_hours, agent_requests, files_changed
-                FROM contribution_scores
-                WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL
-                ORDER BY rank ASC NULLS LAST, total_score DESC
-                """,
-                period_type,
-                period_key,
-            )
-        snapshot = await conn.fetchrow(
-            "SELECT created_at FROM leaderboard_snapshots WHERE period_type = $1 AND period_key = $2",
-            period_type,
-            period_key,
-        )
+    except asyncpg.UndefinedTableError:
+        return {
+            "period_type": period_type,
+            "period_key": period_key,
+            "generated_at": None,
+            "entries": [],
+        }
     generated_at = snapshot["created_at"].isoformat() if snapshot and snapshot.get("created_at") else None
     return {
         "period_type": period_type,
@@ -1084,7 +1107,6 @@ def _norm_jsonb(val):
 @app.get("/api/incentive-rules", dependencies=[Depends(require_api_key)])
 async def list_incentive_rules(enabled_only: bool = Query(False)):
     """List incentive rules. enabled_only=true returns only enabled rules."""
-    import asyncpg
     pool = await get_pool()
     try:
         async with pool.acquire() as conn:
@@ -1251,12 +1273,57 @@ async def recalculate_incentive_rule(rule_id: int):
     return {"ok": True, "message": f"Recalculated {row['period_type']} for rule {rule_id}."}
 
 
-# ─── 健康检查 ─────────────────────────────────────────────────────────────────
+# ─── 健康检查与闭环健康 ───────────────────────────────────────────────────────
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/health/loop", dependencies=[Depends(require_api_key)])
+async def health_loop(days: int = Query(7, ge=1, le=30)):
+    """
+    Loop health: whether we have received any Hook sessions in the last N days.
+    Used by admin UI to show "loop not connected" guidance when loop_ok is false.
+    """
+    pool = await get_pool()
+    try:
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*)::int AS sessions_count,
+                    MAX(ended_at) AS last_session_at,
+                    COUNT(DISTINCT user_email)::int AS members_count
+                FROM agent_sessions
+                WHERE ended_at >= NOW() - ($1::text || ' days')::interval
+                """,
+                days,
+            )
+    except asyncpg.UndefinedTableError:
+        return {
+            "loop_ok": False,
+            "days_checked": days,
+            "last_session_at": None,
+            "sessions_count_7d": 0,
+            "members_with_sessions_7d": 0,
+        }
+    if not row or row["sessions_count"] == 0:
+        return {
+            "loop_ok": False,
+            "days_checked": days,
+            "last_session_at": None,
+            "sessions_count_7d": 0,
+            "members_with_sessions_7d": 0,
+        }
+    return {
+        "loop_ok": True,
+        "days_checked": days,
+        "last_session_at": row["last_session_at"].isoformat() if row.get("last_session_at") else None,
+        "sessions_count_7d": row["sessions_count"],
+        "members_with_sessions_7d": row["members_count"],
+    }
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+# 减小构建上下文
+.venv
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+node_modules
+web/dist
+.git
+*.md
+e2e
+.env
+.env.local
+*.log
+hook/java/target
+collector/.venv
+collector/__pycache__

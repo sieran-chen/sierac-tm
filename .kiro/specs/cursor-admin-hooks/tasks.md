@@ -1,6 +1,6 @@
 # Tasks: Cursor Admin Hooks（多语言）
 
-> **状态**：Phase 1–2 已完成；Phase 3（白名单校验）Python 已实现，Java 待更新  
+> **状态**：Phase 1–3 已完成（含 Java 白名单校验）  
 > **最后更新**：2026-02-26
 
 ---
@@ -8,8 +8,8 @@
 ## 进度概览
 
 - **总任务数**：13
-- **已完成**：Phase 1–2（9 项）+ Phase 3 Python（2 项）
-- **待完成**：Phase 3 Java（2 项）
+- **已完成**：Phase 1–2（9 项）+ Phase 3 Python（2 项）+ Phase 3 Java（2 项）
+- **待完成**：无
 
 ---
 
@@ -43,14 +43,14 @@
 - [x] 3.2 hook_config.json 增加 `whitelist_ttl_seconds`、`whitelist_enabled` 字段
 - [x] 3.3 beforeSubmitPrompt 匹配成功时将 project_id 写入本地 state，stop 事件读取并上报
 
-### 3.2 Java 实现（待完成）
+### 3.2 Java 实现（已完成）
 
-- [ ] 3.4 Java 版 CursorHook.java 同步实现白名单校验逻辑（与 Python 行为一致）：
-  - [ ] 本地缓存读写（JSON 文件，TTL 检查）
-  - [ ] GET /api/projects/whitelist 拉取
-  - [ ] 路径匹配（前缀 + 正则，Windows 大小写不敏感）
-  - [ ] fail-open 处理
-- [ ] 3.5 Java 版 hook_config.json 支持 `whitelist_ttl_seconds`、`whitelist_enabled`、`project_id` 字段
+- [x] 3.4 Java 版 CursorHook.java 同步实现白名单校验逻辑（与 Python 行为一致）：
+  - [x] 本地缓存读写（JSON 文件，TTL 检查）
+  - [x] GET /api/projects/whitelist 拉取
+  - [x] 路径匹配（前缀 + 正则，Windows 大小写不敏感）
+  - [x] fail-open 处理
+- [x] 3.5 Java 版 hook_config.json 支持 `whitelist_ttl_seconds`、`whitelist_enabled`、`project_id` 字段
 
 ---
 
@@ -61,7 +61,7 @@
 - [x] 部署后 Cursor 触发 stop 时 collector 收到 POST 且 agent_sessions 有记录
 - [x] Python：白名单不匹配时返回 `{"continue": false, ...}`，Cursor 拦截提交
 - [x] Python：Collector 不可达时 fail-open，不阻塞成员
-- [ ] Java：白名单校验行为与 Python 一致（依赖 3.4 完成）
+- [x] Java：白名单校验行为与 Python 一致（依赖 3.4 完成）
 
 ---
 

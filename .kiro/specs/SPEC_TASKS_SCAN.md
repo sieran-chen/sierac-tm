@@ -44,10 +44,10 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 | Spec | 最后更新 | 总任务数 | 已完成 | 进行中 | 待完成 | 阻塞 |
 |------|----------|----------|--------|--------|--------|------|
 | cursor-admin-core | 2026-02-26 | — | 全部 | — | — | — |
-| cursor-admin-hooks | 2026-02-26 | 13 | 11 | 0 | 2（Java 白名单） | 无 |
+| cursor-admin-hooks | 2026-02-26 | 13 | 13（全部完成） | 0 | 0 | 无 |
 | cursor-admin-projects | 2026-02-26 | 27 | 27（全部完成） | 0 | 0 | 无 |
 | cursor-admin-incentives | 2026-02-26 | 15 | 15（全部完成） | 0 | 0 | 无 |
-| cursor-admin-loop-and-data | 2026-02-26 | 10 | 7 | 0 | 3 | 无 |
+| cursor-admin-loop-and-data | 2026-02-26 | 10 | 10（全部完成） | 0 | 0 | 无 |
 
 ### cursor-admin-projects 当前进度明细
 
@@ -69,8 +69,8 @@ Phase 2: cursor-admin-incentives Phase 2（排行榜 + 激励闭环）
 ## 已知缺口（非功能未实现，而是 spec 未显式覆盖）
 
 - **业务闭环依赖 Hook**：检测不到 Hook 上报时，「项目参与 / 会话归属 / 激励」侧闭环不通；能展示的仅为不依赖 Hook 的部分（用量、支出、项目配置、Git 贡献）。说明见 `docs/BUSINESS_LOOP_AND_HOOK.md`。
-- **闭环可验证性**：已由 spec **cursor-admin-loop-and-data** 覆盖（GET /api/health/loop + 前端展示）；待实现。
-- **无 Hook 时的产品形态**：已由 spec **cursor-admin-loop-and-data** 覆盖（requirements + design + tasks）；待实现闭环健康 API 与前端引导。
+- **闭环可验证性**：已由 spec **cursor-admin-loop-and-data** 实现（GET /api/health/loop + 前端展示）。
+- **无 Hook 时的产品形态**：已由 spec **cursor-admin-loop-and-data** 实现（闭环健康 API 与前端引导、空状态文案与《数据可见性条件与排查》链接）。
 
 ---
 

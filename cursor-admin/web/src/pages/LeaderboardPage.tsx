@@ -172,8 +172,9 @@ export default function LeaderboardPage() {
               ))}
               {data.entries.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-gray-500">
-                    暂无排行数据。请确认该周期已执行过贡献度计算，且成员已接入 Hook。
+                  <td colSpan={6} className="px-5 py-8 text-center">
+                    <p className="text-gray-500">暂无排行数据</p>
+                    <p className="text-xs text-gray-400 mt-1">接通 Hook 后成员才会参与排行。请先到「激励规则」配置规则并执行「重新计算」。详见《数据可见性条件与排查》。</p>
                   </td>
                 </tr>
               )}

@@ -188,7 +188,7 @@ export default function WorkspacePage() {
                   <td colSpan={5} className="px-5 py-8 text-center">
                     <p className="text-gray-500 mb-1">暂无参与数据</p>
                     <p className="text-xs text-gray-400 max-w-md mx-auto">
-                      数据来自 Hook 上报的 agent_sessions。若仅有「未归属」会话，请在对应项目工作目录下安装 Hook 并确保该项目已在「项目管理」立项，新产生的会话才会带上 project_id。
+                      数据来自 Hook 上报。接通 Hook 后可在此查看项目参与。若仅有「未归属」会话，请在对应项目工作目录下安装 Hook 并确保该项目已在「项目管理」立项。详见《数据可见性条件与排查》。
                     </p>
                   </td>
                 </tr>
@@ -210,7 +210,7 @@ export default function WorkspacePage() {
         <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-gray-500 mb-1">暂无会话明细</p>
           <p className="text-xs text-gray-400 max-w-md mx-auto">
-            请先在成员电脑安装 Hook 并触发一次 Agent 会话。
+            接通 Hook 后可查看会话明细。请先在成员电脑安装 Hook 并触发一次 Agent 会话。详见《数据可见性条件与排查》。
           </p>
         </div>
       )}

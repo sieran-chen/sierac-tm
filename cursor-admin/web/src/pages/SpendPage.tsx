@@ -4,8 +4,17 @@ import { api, SpendRow } from '../api/client'
 export default function SpendPage() {
   const [rows, setRows] = useState<SpendRow[]>([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { api.spend().then(setRows) }, [])
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    api.spend()
+      .then(setRows)
+      .catch((e) => { setError((e as Error).message); setRows([]) })
+      .finally(() => setLoading(false))
+  }, [])
 
   const filtered = rows.filter(r =>
     r.email.includes(search) || (r.name ?? '').includes(search)
@@ -21,6 +30,13 @@ export default function SpendPage() {
           本计费周期团队总支出：<strong className="text-gray-800">${(total / 100).toFixed(2)}</strong>
         </span>
       </div>
+
+      {loading && <p className="text-sm text-gray-500">加载中…</p>}
+      {error && (
+        <p className="text-sm text-red-600">
+          加载失败：{error}。请检查 Cursor API 配置（CURSOR_API_TOKEN）与同步任务是否正常执行。
+        </p>
+      )}
 
       <input value={search} onChange={e => setSearch(e.target.value)}
         placeholder="搜索成员邮箱或姓名…"
@@ -55,7 +71,12 @@ export default function SpendPage() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={5} className="px-5 py-6 text-center text-gray-400">暂无数据</td></tr>
+              <tr>
+                <td colSpan={5} className="px-5 py-6 text-center">
+                  <p className="text-gray-500">暂无支出数据</p>
+                  <p className="text-xs text-gray-400 mt-1">可能当前套餐未提供支出接口，或同步尚未完成。请检查 Cursor API 配置与采集服务同步任务。详见《数据可见性条件与排查》。</p>
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

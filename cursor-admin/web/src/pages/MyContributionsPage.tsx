@@ -80,11 +80,13 @@ export default function MyContributionsPage() {
     ).then((scores) => setHistory(keys.map((period_key, i) => ({ period_key, total_score: scores[i] }))))
   }, [email, periodType])
 
+  const hasZeroScore = score && score.total_score === 0 && (score.projects?.length ?? 0) === 0 && !error
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-xl font-semibold">我的贡献</h1>
       <p className="text-sm text-gray-600">
-        查看个人贡献得分、排名与各维度明细；未接入 Hook 时会话维度为 0，且不参与排行。
+        查看个人贡献得分、排名与各维度明细；未接入 Hook 时会话维度为 0，且不参与排行。得分由激励规则计算，若从未计算请先到「激励规则」执行重新计算。
       </p>
 
       <div className="flex flex-wrap gap-4 items-end">
@@ -128,6 +130,12 @@ export default function MyContributionsPage() {
 
       {error && (
         <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">{error}</div>
+      )}
+
+      {hasZeroScore && (
+        <div className="rounded-lg bg-blue-50 text-blue-800 px-4 py-2 text-sm">
+          当前周期暂无得分数据。接通 Hook 后可查看会话维度得分与排行。请到「激励规则」选择对应周期类型并点击「重新计算」。详见《数据可见性条件与排查》。
+        </div>
       )}
 
       {!email && (

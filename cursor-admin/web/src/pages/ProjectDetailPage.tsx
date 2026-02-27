@@ -171,7 +171,7 @@ export default function ProjectDetailPage() {
             {contributions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-5 py-4 text-center text-gray-400">
-                  暂无贡献数据。请确保项目已填写「关联仓库」且采集服务已配置 GIT_REPOS_ROOT；数据在定时同步后更新。
+                  暂无贡献数据。请确保项目已填写「关联仓库」且采集服务已配置 GIT_REPOS_ROOT 并执行 Git 采集；数据在定时同步后更新。详见《数据可见性条件与排查》。
                 </td>
               </tr>
             ) : (

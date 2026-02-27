@@ -22,30 +22,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Cursor 极简 Hook（Java）
- * - beforeSubmitPrompt: 仅本地记录会话开始时间
- * - stop: 上报会话结束 + workspace_roots + 时长，每次会话 1 条 POST
+ * Cursor Hook（Java）
+ * - beforeSubmitPrompt: 白名单校验（未匹配则拦截）+ 记录会话开始与 project_id
+ * - stop: 上报会话结束 + workspace_roots + 时长 + project_id
  *
- * 运行方式：从 stdin 读入一行 JSON，向 stdout 输出 {"continue":true}
- * 部署：~/.cursor/hooks/cursor_hook.jar + hook_config.json
+ * 运行方式：从 stdin 读入一行 JSON，向 stdout 输出 {"continue":true} 或 {"continue":false,"message":"..."}
+ * 部署：~/.cursor/hooks/cursor_hook.jar + hook_config.json（支持 whitelist_ttl_seconds、whitelist_enabled、project_id）
  */
 public final class CursorHook {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final boolean IS_WINDOWS = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("win");
 
     public static void main(String[] args) {
         try {
-            run();
+            if (!run()) {
+                return; // already output block message
+            }
         } catch (Throwable t) {
             // 任何异常都不影响 Cursor，只输出放行
         }
         outputContinue();
     }
 
-    private static void run() throws IOException {
+    /** @return false if we already wrote a block response (do not call outputContinue) */
+    private static boolean run() throws IOException {
         String raw = readStdin();
         if (raw == null || raw.isBlank()) {
-            return;
+            return true;
         }
         JsonNode event = JSON.readTree(raw);
         String eventName = text(event, "hook_event_name");
@@ -57,18 +61,36 @@ public final class CursorHook {
         Config config = loadConfig(hooksDir);
 
         if ("beforeSubmitPrompt".equals(eventName)) {
-            if (conversationId != null && !conversationId.isEmpty()) {
-                saveSessionStart(config.stateDir, conversationId, workspaceRoots, nowSec);
+            Integer projectId = null;
+            if (config.whitelistEnabled) {
+                List<JsonNode> rules = getWhitelist(config);
+                if (rules != null) {
+                    JsonNode matched = matchWhitelist(workspaceRoots, config.userEmail, rules);
+                    if (matched == null) {
+                        String msg = "\u26d4 当前工作目录未在公司项目白名单中。请联系管理员在 Sierac 平台完成项目立项后再使用企业 Cursor。\n当前目录: " + workspaceRoots;
+                        outputBlock(msg);
+                        return false;
+                    }
+                    if (matched.has("project_id") && !matched.get("project_id").isNull()) {
+                        projectId = matched.get("project_id").asInt();
+                    }
+                }
+                // fail-open: rules == null (network error) -> allow
             }
-            return;
+            if (conversationId != null && !conversationId.isEmpty()) {
+                saveSessionStart(config.stateDir, conversationId, workspaceRoots, nowSec, projectId);
+            }
+            return true;
         }
 
         if ("stop".equals(eventName)) {
             Integer durationSeconds = null;
+            Integer projectId = null;
             if (conversationId != null && !conversationId.isEmpty()) {
                 SessionStart start = loadSessionStart(config.stateDir, conversationId);
                 if (start != null) {
                     durationSeconds = (int) (nowSec - start.startedAt);
+                    projectId = start.projectId;
                     if (workspaceRoots.isEmpty() && start.workspaceRoots != null) {
                         workspaceRoots = start.workspaceRoots;
                     }
@@ -84,11 +106,23 @@ public final class CursorHook {
             if (durationSeconds != null) {
                 payload.put("duration_seconds", durationSeconds);
             }
+            if (projectId != null) {
+                payload.put("project_id", projectId);
+            }
             ArrayNode arr = payload.putArray("workspace_roots");
             for (String r : workspaceRoots) {
                 arr.add(r);
             }
             postSession(config.collectorUrl, payload, config.timeoutSeconds);
+        }
+        return true;
+    }
+
+    private static void outputBlock(String message) {
+        try {
+            ObjectNode o = JSON.createObjectNode().put("continue", false).put("message", message);
+            System.out.println(o.toString());
+        } catch (Exception ignored) {
         }
     }
 
@@ -178,6 +212,8 @@ public final class CursorHook {
                 if (cfg.has("state_dir") && !cfg.get("state_dir").asText().isEmpty()) {
                     c.stateDir = cfg.get("state_dir").asText();
                 }
+                if (cfg.has("whitelist_ttl_seconds")) c.whitelistTtlSeconds = cfg.get("whitelist_ttl_seconds").asInt(300);
+                if (cfg.has("whitelist_enabled")) c.whitelistEnabled = cfg.get("whitelist_enabled").asBoolean(true);
             } catch (Exception ignored) {
             }
         }
@@ -205,6 +241,8 @@ public final class CursorHook {
         String machineId;
         int timeoutSeconds;
         String stateDir;
+        int whitelistTtlSeconds = 300;
+        boolean whitelistEnabled = true;
     }
 
     // ----- 本地状态 -----
@@ -214,10 +252,11 @@ public final class CursorHook {
         return Paths.get(stateDir, safe + ".json");
     }
 
-    private static void saveSessionStart(String stateDir, String conversationId, List<String> workspaceRoots, long startedAt) {
+    private static void saveSessionStart(String stateDir, String conversationId, List<String> workspaceRoots, long startedAt, Integer projectId) {
         try {
             Files.createDirectories(Paths.get(stateDir));
             ObjectNode o = JSON.createObjectNode().put("started_at", startedAt);
+            if (projectId != null) o.put("project_id", projectId);
             ArrayNode arr = o.putArray("workspace_roots");
             for (String r : workspaceRoots) {
                 arr.add(r);
@@ -235,6 +274,7 @@ public final class CursorHook {
             SessionStart s = new SessionStart();
             s.startedAt = n.has("started_at") ? n.get("started_at").asLong() : 0;
             s.workspaceRoots = stringList(n, "workspace_roots");
+            s.projectId = n.has("project_id") && !n.get("project_id").isNull() ? n.get("project_id").asInt() : null;
             return s;
         } catch (Exception e) {
             return null;
@@ -251,6 +291,102 @@ public final class CursorHook {
     private static final class SessionStart {
         long startedAt;
         List<String> workspaceRoots;
+        Integer projectId;
+    }
+
+    // ----- Whitelist (cache + fetch + match, fail-open) -----
+
+    private static Path whitelistCachePath(String stateDir) {
+        return Paths.get(stateDir, "whitelist_cache.json");
+    }
+
+    private static List<JsonNode> loadWhitelistCache(String stateDir, int ttlSeconds) {
+        Path p = whitelistCachePath(stateDir);
+        if (!Files.isRegularFile(p)) return null;
+        try {
+            JsonNode cached = JSON.readTree(Files.readString(p, StandardCharsets.UTF_8));
+            long fetchedAt = cached.has("fetched_at") ? cached.get("fetched_at").asLong() : 0;
+            if (System.currentTimeMillis() / 1000 - fetchedAt >= ttlSeconds) return null;
+            JsonNode rules = cached.get("rules");
+            if (rules == null || !rules.isArray()) return null;
+            List<JsonNode> out = new ArrayList<>();
+            rules.forEach(out::add);
+            return out;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static List<JsonNode> fetchWhitelist(String collectorUrl, int timeoutSeconds) {
+        String url = collectorUrl.replaceAll("/+$", "") + "/api/projects/whitelist";
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(timeoutSeconds))
+                .build();
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Accept", "application/json")
+                .timeout(Duration.ofSeconds(timeoutSeconds))
+                .GET()
+                .build();
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (resp.statusCode() != 200) return null;
+            JsonNode body = JSON.readTree(resp.body());
+            JsonNode rules = body.get("rules");
+            if (rules == null || !rules.isArray()) return null;
+            List<JsonNode> out = new ArrayList<>();
+            rules.forEach(out::add);
+            return out;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static void saveWhitelistCache(String stateDir, List<JsonNode> rules) {
+        try {
+            Files.createDirectories(Paths.get(stateDir));
+            ObjectNode root = JSON.createObjectNode().put("fetched_at", System.currentTimeMillis() / 1000);
+            ArrayNode arr = root.putArray("rules");
+            for (JsonNode r : rules) arr.add(r);
+            Files.writeString(whitelistCachePath(stateDir), root.toString(), StandardCharsets.UTF_8);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static List<JsonNode> getWhitelist(Config config) {
+        List<JsonNode> rules = loadWhitelistCache(config.stateDir, config.whitelistTtlSeconds);
+        if (rules != null) return rules;
+        rules = fetchWhitelist(config.collectorUrl, config.timeoutSeconds);
+        if (rules != null) saveWhitelistCache(config.stateDir, rules);
+        return rules;
+    }
+
+    private static JsonNode matchWhitelist(List<String> workspaceRoots, String userEmail, List<JsonNode> rules) {
+        String userLower = userEmail == null ? "" : userEmail.toLowerCase(java.util.Locale.ROOT);
+        for (JsonNode rule : rules) {
+            List<String> rulePaths = stringList(rule, "workspace_rules");
+            List<String> memberEmails = stringList(rule, "member_emails");
+            for (String root : workspaceRoots) {
+                for (String rulePath : rulePaths) {
+                    boolean matched = IS_WINDOWS
+                        ? root.toLowerCase(java.util.Locale.ROOT).startsWith(rulePath.toLowerCase(java.util.Locale.ROOT))
+                        : root.startsWith(rulePath);
+                    if (!matched) continue;
+                    if (!memberEmails.isEmpty()) {
+                        boolean inList = false;
+                        for (String e : memberEmails) {
+                            if (e != null && e.toLowerCase(java.util.Locale.ROOT).equals(userLower)) {
+                                inList = true;
+                                break;
+                            }
+                        }
+                        if (!inList) continue;
+                    }
+                    return rule;
+                }
+            }
+        }
+        return null;
     }
 
     // ----- HTTP 上报 -----

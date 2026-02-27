@@ -39,6 +39,7 @@ export default function MyProjectsPage() {
   const [email, setEmail] = useState('')
   const [rows, setRows] = useState<MyContributionRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     api.members().then(setMembers)
@@ -47,11 +48,14 @@ export default function MyProjectsPage() {
   useEffect(() => {
     if (!email.trim()) {
       setRows([])
+      setError(null)
       return
     }
     setLoading(true)
+    setError(null)
     api.myContributions({ email: email.trim() })
       .then((res) => setRows(Array.isArray(res) ? res : []))
+      .catch((e) => { setError((e as Error).message); setRows([]) })
       .finally(() => setLoading(false))
   }, [email])
 
@@ -81,6 +85,7 @@ export default function MyProjectsPage() {
       </div>
 
       {loading && <p className="text-sm text-gray-500">加载中…</p>}
+      {error && <p className="text-sm text-red-600">加载失败：{error}</p>}
 
       {!loading && email && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -97,8 +102,9 @@ export default function MyProjectsPage() {
             <tbody className="divide-y divide-gray-100">
               {summary.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-6 text-center text-gray-400">
-                    该成员暂无 Git 贡献记录
+                  <td colSpan={5} className="px-5 py-6 text-center">
+                    <p className="text-gray-500">该成员暂无 Git 贡献记录</p>
+                    <p className="text-xs text-gray-400 mt-1">请确保项目已配置「关联仓库」且采集服务已执行 Git 采集（定时任务或重启后）。详见《数据可见性条件与排查》。</p>
                   </td>
                 </tr>
               ) : (

@@ -33,6 +33,10 @@ scheduler = AsyncIOScheduler()
 async def lifespan(app: FastAPI):
     await init_db()
     await run_full_sync()
+    try:
+        await run_git_collect()
+    except Exception as e:
+        log.exception("Startup git collect failed: %s", e)
 
     scheduler.add_job(
         _sync_and_alert,
@@ -90,6 +94,17 @@ async def _sync_and_alert():
         log.exception("Git collect failed: %s", e)
 
 
+@app.post("/api/admin/trigger-git-collect", status_code=200, dependencies=[Depends(require_api_key)])
+async def trigger_git_collect():
+    """Manually trigger Git collection for all active projects with git_repos. Use after adding/editing project repo URLs."""
+    try:
+        await run_git_collect()
+        return {"ok": True, "message": "Git collect completed"}
+    except Exception as e:
+        log.exception("Git collect failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 async def _job_contribution_daily():
     try:
         await run_calculate_latest("daily")
@@ -144,11 +159,16 @@ class SessionPayload(BaseModel):
 
 
 def _workspace_root_matches_rule(root: str, rule: str) -> bool:
-    """Match root against rule (prefix). Normalize path separators and case for cross-platform."""
+    """Match root against rule (prefix). Normalize path separators and case for cross-platform.
+    Strips trailing punctuation (e.g. full-width 。) from rule so UI typos do not break matching."""
     if not root or not rule:
         return False
     root_n = root.replace("\\", "/").strip().lower()
     rule_n = rule.replace("\\", "/").strip().lower()
+    # Strip trailing punctuation/whitespace that may be entered in UI (e.g. "D:\AI\Sierac-tm。")
+    rule_n = rule_n.rstrip("。，,; \t\n\r")
+    if not rule_n:
+        return False
     return root_n.startswith(rule_n)
 
 

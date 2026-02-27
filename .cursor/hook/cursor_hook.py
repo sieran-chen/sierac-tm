@@ -159,10 +159,13 @@ def match_whitelist(workspace_roots: list[str], user_email: str, rules: list) ->
 
         for root in workspace_roots:
             for rule_path in rule_paths:
+                rp = (rule_path or "").strip().rstrip("。，,; \t\n\r")  # avoid UI typo (e.g. trailing 。)
+                if not rp:
+                    continue
                 if is_windows:
-                    matched = root.lower().startswith(rule_path.lower())
+                    matched = root.lower().startswith(rp.lower())
                 else:
-                    matched = root.startswith(rule_path)
+                    matched = root.startswith(rp)
 
                 if matched:
                     if member_emails and user_email.lower() not in [e.lower() for e in member_emails]:

@@ -68,10 +68,12 @@ export default function ProjectDetailPage() {
               <dd className="text-gray-900">{project.description}</dd>
             </>
           )}
-          {project.repo_url && (
+          {(project.repo_url || ((project.git_repos?.length ?? 0) > 0)) && (
             <>
-              <dt className="text-gray-500">仓库</dt>
-              <dd className="text-gray-900 font-mono text-xs break-all">{project.repo_url}</dd>
+              <dt className="text-gray-500">{project.repo_url ? '仓库' : '关联仓库（Git 采集）'}</dt>
+              <dd className="text-gray-900 font-mono text-xs break-all">
+                {project.repo_url || (project.git_repos ?? []).join(', ')}
+              </dd>
             </>
           )}
           {(project.workspace_rules?.length ?? 0) > 0 && (
@@ -91,9 +93,12 @@ export default function ProjectDetailPage() {
         </dl>
       </section>
 
-      {/* 成本面板 */}
+      {/* 成本面板 — 数据来源：Hook 上报 */}
       <section className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-sm font-medium text-gray-700 mb-3">成本（本周期）</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-gray-700">成本（本周期）</h2>
+          <span className="text-xs text-gray-400" title="数据来自 Hook 上报的 agent_sessions">来自 Hook 上报</span>
+        </div>
         <div className="flex gap-8">
           <div>
             <span className="text-2xl font-semibold text-gray-900">{session_count}</span>
@@ -106,11 +111,17 @@ export default function ProjectDetailPage() {
             <span className="text-sm text-gray-500 ml-1">总时长</span>
           </div>
         </div>
+        {(session_count === 0 && total_duration_seconds === 0) && (
+          <p className="text-xs text-gray-400 mt-2">在符合工作目录规则的 Cursor 会话中安装并启用 Hook 后，会话会归属到本项目并在此显示。</p>
+        )}
       </section>
 
-      {/* 参与面板 */}
+      {/* 参与面板 — 数据来源：Hook 上报 */}
       <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <h2 className="text-sm font-medium text-gray-700 p-5 pb-2">参与成员</h2>
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <h2 className="text-sm font-medium text-gray-700">参与成员</h2>
+          <span className="text-xs text-gray-400">来自 Hook 上报</span>
+        </div>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
             <tr>
@@ -139,9 +150,12 @@ export default function ProjectDetailPage() {
         </table>
       </section>
 
-      {/* 贡献面板 */}
+      {/* 贡献面板 — 数据来源：Git 采集 */}
       <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <h2 className="text-sm font-medium text-gray-700 p-5 pb-2">Git 贡献</h2>
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <h2 className="text-sm font-medium text-gray-700">Git 贡献</h2>
+          <span className="text-xs text-gray-400" title="采集服务定时 clone/fetch 项目仓库并解析 commit">来自 Git 采集</span>
+        </div>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
             <tr>
@@ -157,7 +171,7 @@ export default function ProjectDetailPage() {
             {contributions.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-5 py-4 text-center text-gray-400">
-                  暂无贡献数据（需配置 Git 采集）
+                  暂无贡献数据。请确保项目已填写「关联仓库」且采集服务已配置 GIT_REPOS_ROOT；数据在定时同步后更新。
                 </td>
               </tr>
             ) : (

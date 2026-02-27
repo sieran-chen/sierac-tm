@@ -202,6 +202,7 @@ Cursor Admin API ──► 定时任务 (sync) ──► members, daily_usage, s
 | 查什么       | 去哪里 |
 |--------------|--------|
 | 架构决策     | 本文档 `docs/ARCHITECTURE.md` |
+| 将 Sierac-tm 纳入平台 | `docs/SIERAC-TM-ONBOARDING.md` |
 | Spec 规范    | `.kiro/SPEC_DOCUMENTATION_STANDARD.md` |
 | Spec 总览    | `.kiro/specs/SPEC_TASKS_SCAN.md` |
 | 项目立项设计  | `.kiro/specs/cursor-admin-projects/design.md` |

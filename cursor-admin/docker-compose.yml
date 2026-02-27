@@ -40,10 +40,13 @@ services:
       SMTP_FROM:             ${SMTP_FROM:-}
       SMTP_USE_SSL:          ${SMTP_USE_SSL:-true}
       DEFAULT_WEBHOOK_URL:   ${DEFAULT_WEBHOOK_URL:-}
+      GIT_REPOS_ROOT:        ${GIT_REPOS_ROOT:-/data/git-repos}
+      GIT_COLLECT_DAYS:      ${GIT_COLLECT_DAYS:-7}
     ports:
       - "8000:8000"
     volumes:
       - ./db:/app/../db:ro   # 挂载迁移文件
+      - git_repos_data:/data/git-repos   # Git 采集 clone 的仓库（持久化）
 
   # ─── 管理端 Web ───────────────────────────────────────────────────────────────
   web:
@@ -61,3 +64,4 @@ services:
 
 volumes:
   pg_data:
+  git_repos_data:

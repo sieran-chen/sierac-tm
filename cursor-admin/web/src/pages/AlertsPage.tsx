@@ -21,8 +21,17 @@ const emptyRule = (): Omit<AlertRule, 'id' | 'created_at'> => ({
 export default function AlertsPage() {
   const [rules, setRules] = useState<AlertRule[]>([])
   const [editing, setEditing] = useState<(Omit<AlertRule, 'id' | 'created_at'> & { id?: number }) | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const load = () => api.alertRules().then(setRules)
+  const load = () => {
+    setLoading(true)
+    setError(null)
+    api.alertRules()
+      .then(setRules)
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoading(false))
+  }
   useEffect(() => { load() }, [])
 
   const save = async () => {
@@ -68,6 +77,9 @@ export default function AlertsPage() {
           <Plus size={15} /> 新建规则
         </button>
       </div>
+
+      {loading && <p className="text-sm text-gray-500">加载中…</p>}
+      {error && <p className="text-sm text-red-600">加载失败：{error}</p>}
 
       {/* 规则列表 */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

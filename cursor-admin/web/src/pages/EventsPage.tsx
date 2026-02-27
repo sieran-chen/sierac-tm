@@ -4,12 +4,23 @@ import { api, AlertEvent } from '../api/client'
 
 export default function EventsPage() {
   const [events, setEvents] = useState<AlertEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => { api.alertEvents(100).then(setEvents) }, [])
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    api.alertEvents(100)
+      .then(setEvents)
+      .catch((e) => { setError((e as Error).message); setEvents([]) })
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-xl font-semibold">告警历史</h1>
+      {loading && <p className="text-sm text-gray-500">加载中…</p>}
+      {error && <p className="text-sm text-red-600">加载失败：{error}</p>}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -39,8 +50,13 @@ export default function EventsPage() {
                 </td>
               </tr>
             ))}
-            {events.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-6 text-center text-gray-400">暂无告警记录</td></tr>
+            {!loading && events.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-5 py-8 text-center">
+                  <p className="text-gray-500">暂无告警记录</p>
+                  <p className="text-xs text-gray-400 mt-1">告警在同步任务检测到规则触发后产生。</p>
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

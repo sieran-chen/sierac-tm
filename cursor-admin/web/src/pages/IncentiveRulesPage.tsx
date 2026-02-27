@@ -19,12 +19,15 @@ export default function IncentiveRulesPage() {
   const [editCaps, setEditCaps] = useState<Record<string, number | undefined>>({})
   const [recalculatingId, setRecalculatingId] = useState<number | null>(null)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setError(null)
     api.incentiveRules()
       .then(setRules)
-      .catch((e) => setError(e.message))
+      .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false))
-  }, [])
+  }
+  useEffect(() => { load() }, [])
 
   const startEdit = (r: IncentiveRule) => {
     setEditingId(r.id)
@@ -93,6 +96,13 @@ export default function IncentiveRulesPage() {
 
       {error && (
         <div className="rounded-lg bg-red-50 text-red-700 px-4 py-2 text-sm">{error}</div>
+      )}
+
+      {rules.length === 0 && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-8 text-center text-gray-600">
+          <p className="font-medium">暂无激励规则</p>
+          <p className="text-sm text-gray-500 mt-1">部署时数据库迁移会插入默认规则；若仍为空请检查采集服务日志或联系管理员。</p>
+        </div>
       )}
 
       <div className="space-y-4">

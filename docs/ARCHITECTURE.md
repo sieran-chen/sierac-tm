@@ -202,6 +202,8 @@ Cursor Admin API ──► 定时任务 (sync) ──► members, daily_usage, s
 | 查什么       | 去哪里 |
 |--------------|--------|
 | 架构决策     | 本文档 `docs/ARCHITECTURE.md` |
+| 业务闭环与 Hook、Spec 缺口 | `docs/BUSINESS_LOOP_AND_HOOK.md` |
+| 数据可见性条件与排查 | `docs/DATA_VISIBILITY_AND_TROUBLESHOOTING.md` |
 | 将 Sierac-tm 纳入平台 | `docs/SIERAC-TM-ONBOARDING.md` |
 | Spec 规范    | `.kiro/SPEC_DOCUMENTATION_STANDARD.md` |
 | Spec 总览    | `.kiro/specs/SPEC_TASKS_SCAN.md` |

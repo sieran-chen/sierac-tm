@@ -4,11 +4,30 @@ apply incentive_rules weights/caps, upsert contribution_scores and leaderboard_s
 """
 
 import calendar
+import json
 import logging
 from datetime import date, timedelta
 from decimal import Decimal
 
 from database import get_pool
+
+
+def _parse_jsonb(val) -> dict:
+    """Parse a JSONB value that asyncpg may return as dict or str."""
+    if val is None:
+        return {}
+    if isinstance(val, dict):
+        return val
+    if isinstance(val, str):
+        try:
+            parsed = json.loads(val)
+            return parsed if isinstance(parsed, dict) else {}
+        except (ValueError, TypeError):
+            return {}
+    try:
+        return dict(val)
+    except (TypeError, ValueError):
+        return {}
 
 log = logging.getLogger("contribution_engine")
 
@@ -243,8 +262,8 @@ async def calculate_period(period_type: str, period_key: str, rule_id: int) -> N
     if not rule:
         log.warning("No enabled rule id=%s", rule_id)
         return
-    weights = dict(rule["weights"] or {})
-    caps = dict(rule["caps"] or {})
+    weights = _parse_jsonb(rule["weights"])
+    caps = _parse_jsonb(rule["caps"])
 
     git_data = await _aggregate_git(pool, period_type, period_key)
     session_data = await _aggregate_sessions(pool, period_type, period_key, caps)

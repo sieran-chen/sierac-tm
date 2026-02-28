@@ -1,8 +1,14 @@
 FROM python:3.12-slim
 
-# Git 用于采集服务定时 clone/fetch 项目仓库（git_collector）
-RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
+# 国内服务器若无法访问 deb.debian.org，可传 APT_MIRROR，如: --build-arg APT_MIRROR=http://mirrors.aliyun.com
+ARG APT_MIRROR=
+RUN set -e; \
+  if [ -n "$APT_MIRROR" ]; then \
+    for f in /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources; do \
+      [ -f "$$f" ] && sed -i.bak "s|http://deb.debian.org|$APT_MIRROR|g" "$$f" && sed -i.bak "s|https://deb.debian.org|$APT_MIRROR|g" "$$f" || true; \
+    done; \
+  fi; \
+  apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 
 # 国内服务器构建可传 PIP_INDEX_URL，如: --build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 ARG PIP_INDEX_URL=

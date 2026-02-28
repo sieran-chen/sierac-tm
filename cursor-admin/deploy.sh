@@ -8,6 +8,7 @@ REMOTE_REPO="${REMOTE_REPO:-/opt/Sierac-tm}"
 APP_DIR="${REMOTE_REPO}/cursor-admin"
 
 echo ">>> 在 ${DEPLOY_USER}@${DEPLOY_HOST} 上拉取代码并构建..."
-ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "cd ${REMOTE_REPO} && git pull && cd cursor-admin && (test -f .env || (cp .env.example .env && echo '请 SSH 登录编辑 cursor-admin/.env 后重新执行 deploy.sh' && exit 1)) && docker compose up -d --build"
+# 若服务器 .env 未配置 APT_MIRROR 且构建常因 deb.debian.org 超时失败，则自动追加国内镜像
+ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "cd ${REMOTE_REPO} && git pull && cd cursor-admin && (test -f .env || (cp .env.example .env && echo '请 SSH 登录编辑 cursor-admin/.env 后重新执行 deploy.sh' && exit 1)) && (grep -q '^APT_MIRROR=' .env 2>/dev/null || echo 'APT_MIRROR=http://mirrors.aliyun.com' >> .env) && docker compose up -d --build"
 
 echo ">>> 部署完成。管理端: http://${DEPLOY_HOST}:3000  采集健康: http://${DEPLOY_HOST}:8000/health"

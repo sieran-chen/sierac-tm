@@ -23,6 +23,7 @@ services:
       dockerfile: collector/Dockerfile
       args:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-}
+        APT_MIRROR: ${APT_MIRROR:-}
     restart: unless-stopped
     depends_on:
       db:

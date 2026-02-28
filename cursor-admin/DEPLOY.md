@@ -30,7 +30,7 @@ sudo mkdir -p /opt/Sierac-tm
 sudo git clone 你的仓库地址 /opt/Sierac-tm
 cd /opt/Sierac-tm/cursor-admin
 cp .env.example .env
-nano .env   # 填写 CURSOR_API_TOKEN、POSTGRES_PASSWORD、INTERNAL_API_KEY；DATABASE_URL 中密码与 POSTGRES_PASSWORD 一致
+nano .env   # 填写 CURSOR_API_TOKEN、POSTGRES_PASSWORD、INTERNAL_API_KEY；DATABASE_URL 中密码与 POSTGRES_PASSWORD 一致。国内服务器若构建时无法访问 deb.debian.org，可增加 APT_MIRROR=http://mirrors.aliyun.com
 ```
 
 若已有 `/opt/cursor-admin/.env`，可直接复制：

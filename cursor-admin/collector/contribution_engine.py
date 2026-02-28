@@ -446,21 +446,24 @@ async def calculate_period(period_type: str, period_key: str, rule_id: int) -> N
 
 
 async def run_calculate_latest(period_type: str, rule_id: int = 1) -> None:
-    """Compute the latest completed period (e.g. last week for weekly)."""
+    """Compute both the latest completed period and the current in-progress period."""
     from datetime import date
     today = date.today()
+    keys: list[str] = []
     if period_type == "daily":
         yesterday = today - timedelta(days=1)
-        period_key = yesterday.isoformat()
+        keys = [yesterday.isoformat(), today.isoformat()]
     elif period_type == "weekly":
         last_week = today - timedelta(days=7)
-        y, w, _ = last_week.isocalendar()
-        period_key = f"{y}-W{w:02d}"
+        y_prev, w_prev, _ = last_week.isocalendar()
+        y_cur, w_cur, _ = today.isocalendar()
+        keys = [f"{y_prev}-W{w_prev:02d}", f"{y_cur}-W{w_cur:02d}"]
     elif period_type == "monthly":
         first_this = today.replace(day=1)
         last_month = first_this - timedelta(days=1)
-        period_key = last_month.strftime("%Y-%m")
+        keys = [last_month.strftime("%Y-%m"), today.strftime("%Y-%m")]
     else:
         log.warning("Unknown period_type %s", period_type)
         return
-    await calculate_period(period_type, period_key, rule_id)
+    for period_key in keys:
+        await calculate_period(period_type, period_key, rule_id)

@@ -1,10 +1,12 @@
 FROM python:3.12-slim
 
 # 国内服务器可传 APT_MIRROR 加速（如 APT_MIRROR=http://mirrors.aliyun.com）
+# 使用两段 find 避免 sh 中括号被解析为子 shell
 ARG APT_MIRROR=
 RUN set -e; \
   if [ -n "$APT_MIRROR" ]; then \
-    find /etc/apt -maxdepth 2 -type f \\( -name '*.list' -o -name '*.sources' \\) -exec grep -l 'deb.debian.org' {} \\; 2>/dev/null | xargs -r sed -i "s|http://deb.debian.org|$APT_MIRROR|g; s|https://deb.debian.org|$APT_MIRROR|g"; \
+    find /etc/apt -maxdepth 2 -type f -name '*.list' -exec grep -l 'deb.debian.org' {} \; 2>/dev/null | xargs -r sed -i "s|http://deb.debian.org|$APT_MIRROR|g; s|https://deb.debian.org|$APT_MIRROR|g"; \
+    find /etc/apt -maxdepth 2 -type f -name '*.sources' -exec grep -l 'deb.debian.org' {} \; 2>/dev/null | xargs -r sed -i "s|http://deb.debian.org|$APT_MIRROR|g; s|https://deb.debian.org|$APT_MIRROR|g"; \
   fi; \
   apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 

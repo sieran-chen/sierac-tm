@@ -312,7 +312,7 @@ async def calculate_period(period_type: str, period_key: str, rule_id: int) -> N
                 raw.get(DIM_FILES_CHANGED, 0),
                 raw.get(DIM_SESSION_DURATION_HOURS, 0),
                 raw.get(DIM_AGENT_REQUESTS, 0),
-                score_breakdown,
+                json.dumps(score_breakdown),
                 total,
                 hook_adopted,
             )
@@ -391,7 +391,7 @@ async def calculate_period(period_type: str, period_key: str, rule_id: int) -> N
                 raw.get(DIM_FILES_CHANGED, 0),
                 raw.get(DIM_SESSION_DURATION_HOURS, 0),
                 raw.get(DIM_AGENT_REQUESTS, 0),
-                score_breakdown,
+                json.dumps(score_breakdown),
                 total_score,
                 hook_adopted,
             )
@@ -440,7 +440,7 @@ async def calculate_period(period_type: str, period_key: str, rule_id: int) -> N
             """,
             period_type,
             period_key,
-            {"entries": snapshot_entries, "generated_at": None},
+            json.dumps({"entries": snapshot_entries, "generated_at": None}),
         )
     log.info("Calculated %s %s: %d users, %d ranked", period_type, period_key, len(user_totals), len(rows))
 

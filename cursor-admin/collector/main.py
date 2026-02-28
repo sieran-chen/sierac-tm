@@ -1099,11 +1099,18 @@ class IncentiveRuleUpdate(BaseModel):
 
 
 def _norm_jsonb(val):
-    """Normalize JSONB/dict for JSON response (asyncpg may return dict or custom type)."""
+    """Normalize JSONB/dict for JSON response (asyncpg may return dict, str, or custom type)."""
     if val is None:
         return {}
     if isinstance(val, dict):
         return val
+    if isinstance(val, str):
+        import json as _json
+        try:
+            parsed = _json.loads(val)
+            return parsed if isinstance(parsed, dict) else {}
+        except (ValueError, TypeError):
+            return {}
     try:
         return dict(val)
     except (TypeError, ValueError):
@@ -1316,7 +1323,7 @@ async def health_loop(days: int = Query(7, ge=1, le=30)):
                 FROM agent_sessions
                 WHERE ended_at >= NOW() - ($1::text || ' days')::interval
                 """,
-                days,
+                str(days),
             )
     except asyncpg.UndefinedTableError:
         return {

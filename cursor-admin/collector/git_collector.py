@@ -72,7 +72,7 @@ async def _collect_one_repo(project_id: int, repo_url: str, since_date: date) ->
             return
 
     since_str = since_date.isoformat()
-    code, log_out, err = await _run_git(repo_dir, "log", f"--since={since_str}", "--format=%ae|%ad|%H", "--date=short")
+    code, log_out, err = await _run_git(repo_dir, "log", "--all", f"--since={since_str}", "--format=%ae|%ad|%H", "--date=short")
     if code != 0:
         log.warning("git log failed for project_id=%s: %s", project_id, err.strip())
         return
@@ -114,10 +114,10 @@ async def _collect_one_repo(project_id: int, repo_url: str, since_date: date) ->
                     (project_id, author_email, commit_date, commit_count, lines_added, lines_removed, files_changed)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ON CONFLICT (project_id, author_email, commit_date) DO UPDATE SET
-                    commit_count   = git_contributions.commit_count + EXCLUDED.commit_count,
-                    lines_added    = git_contributions.lines_added + EXCLUDED.lines_added,
-                    lines_removed  = git_contributions.lines_removed + EXCLUDED.lines_removed,
-                    files_changed  = git_contributions.files_changed + EXCLUDED.files_changed
+                    commit_count   = EXCLUDED.commit_count,
+                    lines_added    = EXCLUDED.lines_added,
+                    lines_removed  = EXCLUDED.lines_removed,
+                    files_changed  = EXCLUDED.files_changed
                 """,
                 project_id,
                 author_email,

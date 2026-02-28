@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { Plus, Archive, Edit2, Check, X, Copy, RefreshCw } from 'lucide-react'
 import { api, Project, ProjectCreate, ProjectUpdate } from '../api/client'
 
-function repoStatus(p: Project): 'created' | 'failed' | 'none' {
-  const hasRepo = !!(p.gitlab_project_id || (p.repo_provider === 'github' && p.github_repo_full_name))
-  if (hasRepo && p.hook_initialized) return 'created'
-  if (hasRepo && !p.hook_initialized) return 'failed'
+function repoStatus(p: Project): 'created' | 'linked' | 'failed' | 'none' {
+  const hasAutoRepo = !!(p.gitlab_project_id || (p.repo_provider === 'github' && p.github_repo_full_name))
+  if (hasAutoRepo && p.hook_initialized) return 'created'
+  if (hasAutoRepo && !p.hook_initialized) return 'failed'
+  if (p.git_repos && p.git_repos.length > 0) return 'linked'
   return 'none'
 }
 
@@ -222,6 +223,11 @@ export default function ProjectsPage() {
                       已创建
                     </span>
                   )}
+                  {repoStatus(p) === 'linked' && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      已关联
+                    </span>
+                  )}
                   {repoStatus(p) === 'failed' && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                       创建失败
@@ -238,7 +244,7 @@ export default function ProjectsPage() {
                   )}
                   {repoStatus(p) === 'none' && (
                     <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                      未创建
+                      未配置
                     </span>
                   )}
                 </td>

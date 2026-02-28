@@ -1,0 +1,8 @@
+{
+  "registry-mirrors": ["https://<你的加速器前缀>.mirror.aliyuncs.com"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "2"
+  }
+}

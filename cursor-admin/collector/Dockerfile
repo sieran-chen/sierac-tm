@@ -1,12 +1,10 @@
 FROM python:3.12-slim
 
-# 国内服务器若无法访问 deb.debian.org，可传 APT_MIRROR，如: --build-arg APT_MIRROR=http://mirrors.aliyun.com
+# 国内服务器可传 APT_MIRROR 加速（如 APT_MIRROR=http://mirrors.aliyun.com）
 ARG APT_MIRROR=
 RUN set -e; \
   if [ -n "$APT_MIRROR" ]; then \
-    for f in /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources; do \
-      [ -f "$$f" ] && sed -i.bak "s|http://deb.debian.org|$APT_MIRROR|g" "$$f" && sed -i.bak "s|https://deb.debian.org|$APT_MIRROR|g" "$$f" || true; \
-    done; \
+    find /etc/apt -maxdepth 2 -type f \\( -name '*.list' -o -name '*.sources' \\) -exec grep -l 'deb.debian.org' {} \\; 2>/dev/null | xargs -r sed -i "s|http://deb.debian.org|$APT_MIRROR|g; s|https://deb.debian.org|$APT_MIRROR|g"; \
   fi; \
   apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 

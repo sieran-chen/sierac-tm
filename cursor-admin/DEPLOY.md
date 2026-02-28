@@ -62,11 +62,30 @@ cd cursor-admin
 
 可选环境变量：`DEPLOY_HOST`、`DEPLOY_USER`、`REMOTE_REPO`（默认 `REMOTE_REPO=/opt/Sierac-tm`）。
 
+**构建耗时**：首次或 Dockerfile/依赖变更后构建 collector 会较慢（约数分钟）。国内服务器务必在 `.env` 中配置 `APT_MIRROR=http://mirrors.aliyun.com`，否则 apt 可能因访问 deb.debian.org 超时导致构建失败；配置后 apt 步骤会走国内源，通常 1～2 分钟内完成。后续仅改应用代码时，BuildKit 会复用 apt/poetry 等层，只重做最后一两层。
+
 **新版本说明**：Collector 启动时会自动执行 `db/migrations/` 下所有 `.sql`（含 004_github_projects，用于支持 GitHub 立项）。若需立项时自动创建 **GitHub** 仓库，在服务器 `cursor-admin/.env` 中配置 `GITHUB_TOKEN`、可选 `GITHUB_ORG`；GitLab 仍为 `GITLAB_URL`、`GITLAB_TOKEN`、`GITLAB_GROUP_ID`。
 
 ---
 
-## 三、清理服务器构建/缓存
+## 三、阿里云服务器推荐配置
+
+服务器在阿里云 ECS 时，建议做以下配置以加快构建与拉镜象：
+
+1. **Docker 镜像加速**（拉取 python/node/nginx 等基础镜像更快）  
+   在服务器上配置 `/etc/docker/daemon.json`，使用阿里云镜像加速器。详见 `cursor-admin/docker/README.md`；示例见 `cursor-admin/docker/daemon-aliyun.json.example`。配置后执行 `sudo systemctl daemon-reload && sudo systemctl restart docker`。
+
+2. **构建与 .env**  
+   - 在 `cursor-admin/.env` 中已由 deploy 脚本自动追加或可手动设置：
+     - `APT_MIRROR=http://mirrors.aliyun.com`（apt 使用阿里云源）
+     - `PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/`（可选，poetry 使用阿里云 PyPI 源）
+   - 首次部署或 Dockerfile 变更后构建会稍慢，之后仅改应用代码时 BuildKit 会复用层。
+
+按上述配置后，日常执行 `./deploy.sh` 即可。
+
+---
+
+## 四、清理服务器构建/缓存
 
 若需在服务器上删除 `.venv`、`node_modules`、`__pycache__`、`hook/java/target` 等（例如从旧 scp 部署迁移后）：
 
@@ -78,7 +97,7 @@ cd cursor-admin
 
 ---
 
-## 四、验证与防火墙
+## 五、验证与防火墙
 
 - 管理端：http://8.130.50.168:3000  
 - 采集健康：http://8.130.50.168:8000/health  
@@ -87,13 +106,13 @@ cd cursor-admin
 
 ---
 
-## 五、Windows 用户
+## 六、Windows 用户
 
 使用 **Git Bash** 或 **WSL** 运行上述脚本即可。
 
 ---
 
-## 六、部署方式对比与可选升级
+## 七、部署方式对比与可选升级
 
 当前方式（**SSH + 服务器上 git pull + docker compose**）在业界很常见，适合单机、小团队：可复现、不传本地编译产物、脚本简单。不算「最先进」，但足够可靠。
 

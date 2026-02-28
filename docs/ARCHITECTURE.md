@@ -1,216 +1,287 @@
-# Sierac-tm / Cursor Admin 总体架构
+# Sierac-tm 总体架构
 
-> **版本**: v2.1.0  
+> **版本**: v3.0.0  
 > **状态**: 架构真源  
-> **最后更新**: 2026-02-26  
+> **最后更新**: 2026-02-28  
 > **适用范围**: 文档驱动开发、Spec 设计、集成边界
 
 ---
 
-## 一、项目定位（v2.0 战略重定义）
+## 一、项目定位
 
-**Sierac-tm** 是一个**以贡献可视化驱动团队积极性的 AI 团队管理平台**。
+**Sierac-tm** 是一个**基于 Cursor 官方数据的项目激励平台**。
 
-> **核心理念：让贡献被看见，让积极性自然生长。**
+> **核心理念：立项定预算，数据看贡献，激励促转型。**
 
-核心能力：
+平台帮助团队管理者：
+1. **立项**：登记公司项目，关联仓库，设定预算与激励池。
+2. **看贡献**：基于 Cursor 官方 API 自动采集 AI 代码贡献、用量、支出，按项目和成员可视化。
+3. **做激励**：根据贡献数据自动计算激励分配，推动团队向 AI 驱动研发转型。
 
-1. **项目立项与治理**：公司项目在平台注册后进入白名单，Hook 据此放行或拦截，确保公司 Token 只用于公司项目。
-2. **贡献可视化**：多源融合（Cursor API + Git + Hook），展示成员在已立项项目上的代码产出、项目参与、AI 使用效率。
-3. **激励闭环**：贡献度评分、排行榜、周期快照，与团队激励机制挂钩。
-4. **用量与告警**：按用户统计用量与支出，支持告警（保留能力，作为效率参考而非核心展示）。
+### 设计原则
 
-主体实现语言：**Python**（采集服务、同步、告警、API）；**TypeScript/React**（管理端）；**多语言 Hook**（Java 主推、Python 备选），对外协议统一（HTTP JSON）。
-
-### 与旧定位的区别
-
-| 维度 | 旧（用量监控） | 新（贡献可视化 + 治理） |
-|------|---------------|------------------------|
-| 看什么 | 请求数、Token、支出 | 代码产出、项目参与、效率 |
-| 给谁看 | 管理员 | 管理员 + 成员自己 |
-| 驱动什么 | 成本控制 | 积极性 + 合规（同一份数据，两种叙事） |
-| 核心实体 | 成员 + 工作目录 | **项目** + 成员 + 贡献 |
+| 原则 | 说明 |
+|------|------|
+| **纯服务端** | 不在成员机器上安装任何东西（无 Hook、无客户端），零部署成本 |
+| **官方数据驱动** | 所有数据来自 Cursor 官方 API，无法绕开、无法作假 |
+| **激励而非监控** | 展示贡献、激励参与，不做拦截、不做负面排名 |
+| **简单规则** | 激励规则透明、简单，每个人不用计算器就能算出自己的份额 |
+| **轻量立项** | 立项 = 登记项目信息，不自动创建仓库、不注入 Hook |
 
 ---
 
-## 二、系统边界与上下文
+## 二、系统边界
 
 ```
                     ┌─────────────────────────────────────────┐
                     │         Cursor Platform                  │
-                    │  (Admin API / Analytics API / Dashboard)  │
+                    │  Admin API / Analytics API /             │
+                    │  AI Code Tracking API                    │
                     └──────────────────┬──────────────────────┘
                                        │ HTTPS, API Key
                                        ▼
-┌──────────────┐              ┌───────────────────────────────────────┐
-│ 成员机器      │   POST       │  Sierac-tm (本系统)                     │
-│ Cursor IDE   │ ────────────►│  collector (FastAPI)                   │
-│ + Hook       │  /api/       │    ├─ 项目立项 & 白名单管理               │
-│ (Python)     │  sessions    │    ├─ GitLab 仓库创建 & Hook 注入        │
-└──────────────┘              │    ├─ 接收 Hook 上报（含白名单校验）       │
-                              │    ├─ 定时拉取 Cursor API → 落库         │
-┌──────────────┐              │    ├─ 定时扫描 Git 仓库 → 代码贡献        │
-│ GitLab       │  API v4      │    ├─ 贡献度计算（多源融合）              │
-│ (仓库托管)   │ ◄───────────│    ├─ 告警检测与通知                     │
-└──────────────┘              │    └─ 管理端 & 成员端查询 API             │
-                              │  db (PostgreSQL)                        │
-┌──────────────┐              │  web (React + Nginx)  ← 管理端 + 成员端  │
-│ Git 仓库      │  clone/pull  └───────────────────────────────────────┘
-│ (公司项目)    │ ◄───────────  git_sync.py 定时扫描
-└──────────────┘
+                              ┌─────────────────────────────┐
+                              │  Sierac-tm (本系统)           │
+                              │  collector (FastAPI)          │
+                              │    ├─ 项目立项（预算+激励池） │
+                              │    ├─ Cursor API 数据同步     │
+                              │    ├─ AI 代码贡献同步         │
+                              │    ├─ 贡献度计算 & 激励分配   │
+                              │    ├─ 告警检测与通知          │
+                              │    └─ 管理端 & 成员端 API     │
+                              │  db (PostgreSQL)              │
+                              │  web (React + Nginx)          │
+                              └─────────────────────────────┘
 ```
 
-- **入**：Cursor Admin/Analytics API（拉取）、Hook 上报（推送）、Git 仓库（定时扫描）。
-- **出**：GitLab API（仓库创建、Hook 注入、成员管理）、邮件/Webhook 告警、管理端展示、成员端「我的贡献」；贡献排行与评分。
+- **入**：Cursor Admin API（成员/用量/支出）、Cursor Analytics API（团队趋势）、Cursor AI Code Tracking API（commit 级 AI 代码归因）。
+- **出**：管理端展示、成员端「我的贡献」、邮件/Webhook 告警、激励报告。
 
 ---
 
-## 三、包结构与技术选型
+## 三、数据来源（Cursor 官方 API）
+
+| API | 采集频率 | 落库表 | 提供的数据 |
+|-----|----------|--------|-----------|
+| **Admin API** `/teams/members` | 每日 | `members` | 成员列表 |
+| **Admin API** `/teams/daily-usage-data` | 每小时 | `daily_usage` | 每日用量（请求数、Token、模型分布） |
+| **Admin API** `/teams/user-spend` | 每小时 | `spend_snapshots` | 按人支出 |
+| **AI Code Tracking API** `/analytics/ai-code/commits` | 每小时 | `ai_code_commits` | 每个 commit 的 AI 代码归因（TAB/Composer/手写） |
+
+**关键决策**：
+- **AI Code Tracking API 是贡献的第一数据源**：它直接给出「谁在哪个仓库的哪个 commit 用 AI 写了多少行代码」，这是最客观、最难作假的度量。
+- **Admin API 是效率和成本参考**：用量和支出数据用于预算追踪和效率分析。
+- **所有 Cursor API 调用必须经 `cursor_api.py`**，不得在其他模块直接请求。
+
+---
+
+## 四、包结构
 
 ```
 Sierac-tm/
 ├── cursor-admin/              # 主应用
 │   ├── collector/             # 采集服务（Python, FastAPI）
 │   │   ├── main.py            # 入口、API、定时任务
-│   │   ├── sync.py            # Cursor API 同步
-│   │   ├── git_sync.py        # Git 仓库贡献采集
-│   │   ├── gitlab_client.py   # GitLab API 客户端（仓库创建、Hook 注入）
+│   │   ├── sync.py            # Cursor Admin/Analytics API 同步
+│   │   ├── ai_code_sync.py   # AI Code Tracking API 同步
+│   │   ├── contribution_engine.py  # 贡献度计算与激励分配
 │   │   ├── alerts.py          # 告警检测与通知
-│   │   ├── cursor_api.py      # Cursor API 客户端
+│   │   ├── cursor_api.py      # Cursor API 客户端（唯一出口）
 │   │   ├── database.py        # 连接与迁移
-│   │   ├── config.py
-│   │   └── hook_templates/    # Hook 模板（立项时注入仓库）
+│   │   └── config.py
 │   ├── db/
 │   │   └── migrations/        # SQL 迁移（幂等）
-│   ├── hook/                  # Hook 模板源 + 全局安装脚本
-│   │   ├── cursor_hook.py     # Python 实现
-│   │   ├── install.sh | .ps1
-│   │   └── hooks.json 模板
-│   └── web/                   # 管理端（TypeScript, React, Vite）
+│   └── web/                   # 管理端 + 成员端（TypeScript, React, Vite）
 │       └── src/
+│           └── pages/
+│               ├── ProjectsPage.tsx        # 项目管理
+│               ├── ProjectDetailPage.tsx   # 项目详情（预算+贡献）
+│               ├── MyContributionsPage.tsx  # 我的贡献
+│               ├── LeaderboardPage.tsx     # 排行榜
+│               └── IncentiveRulesPage.tsx  # 激励规则配置
 ├── docs/                      # 架构与产品文档
 ├── .kiro/                     # Spec 文档（文档驱动）
 │   └── specs/
-├── .cursor/rules/             # Cursor 规则（本工程）
+├── .cursor/rules/             # Cursor 规则
 └── docker-compose.yml
 ```
 
-| 层次       | 技术选型        | 说明 |
-|------------|-----------------|------|
-| 采集服务   | Python 3.12, FastAPI, asyncpg, APScheduler | 数据拉取与写入、告警逻辑适合 Python；异步 I/O |
-| 管理端     | TypeScript, React, Vite, Tailwind, Recharts | 看板与配置 UI |
-| Hook       | Java 11 (主) / Python 3 (备) | 团队主语言 Java；协议统一，多语言实现 |
-| 数据库     | PostgreSQL 16  | 持久化；迁移为 SQL 文件幂等执行 |
-| 部署       | Docker Compose | db + collector + web |
+| 层次 | 技术选型 | 说明 |
+|------|----------|------|
+| 采集服务 | Python 3.12, FastAPI, asyncpg, APScheduler | 数据同步、计算、API |
+| 管理端 | TypeScript, React, Vite, Tailwind, Recharts | 看板与配置 UI |
+| 数据库 | PostgreSQL 16 | 持久化；SQL 文件幂等迁移 |
+| 部署 | Docker Compose | db + collector + web |
 
 ---
 
-## 四、核心组件与数据流
-
-### 4.1 数据流概览
+## 五、核心数据流
 
 ```
-管理员立项 ──► POST /api/projects ──► projects 表（白名单）
-                                        ↓
-              gitlab_client.py ──► GitLab 创建仓库 + 注入 .cursor/ Hook
-                                        ↓
-              成员 clone 仓库 ──► Hook 自动生效
-                                        ↓
-Hook (beforeSubmitPrompt) ──► 检查白名单 ──► 匹配 → 放行 / 不匹配 → 拦截
-Hook (stop 事件) ──► POST /api/sessions ──► agent_sessions 表（标记所属项目）
-
-Git 仓库 ──► 定时扫描 (git log/diff) ──► git_contributions 表
-              (已立项项目的仓库)            (commit、diff、按人按项目)
-
-Cursor Admin API ──► 定时任务 (sync) ──► members, daily_usage, spend_snapshots
-                    (每小时)
-
-贡献度计算 ──► 融合 git_contributions + agent_sessions + daily_usage
-              ──► contribution_scores 表
-
-告警任务 (sync 后) ──► 规则匹配 ──► alert_events + 邮件/Webhook 通知
-
-管理端 ──► GET /api/* (x-api-key) ──► 查询 DB 展示（按项目聚合）
-成员端 ──► GET /api/my/* ──► 我的贡献、我的项目
+管理员立项 → POST /api/projects → projects 表
+    │                                  （名称、仓库、成员、预算、激励池）
+    │
+    ▼
+Cursor AI Code Tracking API → ai_code_sync.py 定时拉取
+    │                          → ai_code_commits 表
+    │                          （commit hash、user、repo、AI行数/手写行数）
+    │                          → 通过 repo_name 匹配 projects.git_repos 自动归属
+    │
+Cursor Admin API → sync.py 定时拉取
+    │               → members, daily_usage, spend_snapshots
+    │
+    ▼
+贡献度计算 → contribution_engine.py
+    │         → 按项目+成员+周期聚合 AI 代码贡献
+    │         → 结合激励规则计算得分与激励分配
+    │         → contribution_scores + leaderboard_snapshots
+    │
+    ▼
+管理端：项目维度（预算消耗+贡献）、人员维度（排行+激励）
+成员端：我的贡献（AI 代码、效率趋势、激励份额）
 ```
-
-### 4.2 集成边界
-
-| 能力           | 自建 | 集成           | 隔离位置 |
-|----------------|------|----------------|----------|
-| 采集 API、同步、告警 | ✅   |                | collector/*.py |
-| Cursor API 调用 |      | ✅ Cursor 官方  | **cursor_api.py 唯一** |
-| GitLab 仓库管理 |      | ✅ GitLab API v4 | **gitlab_client.py 唯一** |
-| Git 仓库采集   | ✅   | Git CLI        | **git_sync.py** |
-| Hook 协议 + 模板 | ✅   | Cursor Hooks 约定 | hook/* + hook_templates/ |
-| 管理端 UI      | ✅   |                | web/src |
-| 数据库         | ✅   | PostgreSQL     | db/migrations |
-
-**约束**：所有 Cursor API 调用必须经 `cursor_api.py`；所有 GitLab API 调用必须经 `gitlab_client.py`；Hook 与 collector 之间仅通过 HTTP JSON 契约通信。
 
 ---
 
-## 五、核心实体：项目（Project）
+## 六、核心实体：项目（Project）
 
-**项目是平台的一等实体**。所有贡献数据、参与数据、治理策略都围绕「项目」组织。
+**项目是平台的一等实体**。所有贡献数据、预算、激励都围绕「项目」组织。
 
-### 5.1 项目立项流程
+### 6.1 立项 = 登记
 
 ```
-管理员「立项」→ 填写项目信息（名称、描述、成员、仓库 slug）
-    → 平台自动在 GitLab 创建仓库（含 .cursor/ Hook 目录）
-    → 自动添加成员到仓库（Developer 权限）
-    → 白名单生效 → 成员 clone 仓库 → Hook 自动生效
-    → Git 采集开始扫描该项目的仓库
-    → 贡献数据自动归属到该项目
+管理员在平台「立项」
+    → 填写项目信息（名称、描述、关联仓库地址、参与成员）
+    → 设定预算（本周期 Token 预算额度）
+    → 设定激励池（本项目的激励金额或比例）
+    → 系统自动通过 AI Code Tracking API 匹配 repo_name 归属数据
 ```
 
-### 5.2 新增数据模型
+立项不创建仓库、不注入 Hook、不做白名单。就是一个登记动作。
 
-| 表 | 说明 |
-|----|------|
-| `projects` | 已立项项目（名称、Git 仓库、工作目录规则、成员、状态） |
-| `git_contributions` | Git 代码贡献（按人按项目按日：commit 数、增删行数、文件数） |
-| `contribution_scores` | 贡献度得分（按人按项目按周期：多维度得分与总分） |
-| `incentive_rules` | 评分规则（权重配置、周期、启用状态） |
-| `leaderboard_snapshots` | 历史排行快照（可选，供审计与趋势） |
+### 6.2 项目数据模型
 
-### 5.3 治理层
+| 字段 | 说明 |
+|------|------|
+| `id` | 项目 ID |
+| `name` | 项目名称 |
+| `description` | 项目描述 |
+| `git_repos` | 关联的 Git 仓库地址（可多个，用于匹配 AI Code Tracking 数据） |
+| `member_emails` | 参与成员（可选，不填则全员可用） |
+| `status` | 状态（active / archived） |
+| `budget_amount` | 预算额度（本周期） |
+| `budget_period` | 预算周期（monthly / quarterly） |
+| `incentive_pool` | 激励池金额 |
+| `incentive_rule_id` | 关联的激励规则 |
+| `created_by` | 立项人 |
+| `created_at` / `updated_at` | 时间戳 |
 
-- Hook `beforeSubmitPrompt` 检查白名单 → 未立项项目拦截
-- 贡献数据按项目聚合 → 管理员自然可见成员在哪些项目有产出
-- 同一份数据：成员看到「我的贡献」（正向），管理员看到「贡献 + 合规」
+### 6.3 数据归属
 
-### 5.4 原则
-
-- 项目立项是 Phase 0，优先于贡献可视化和激励
-- 激励逻辑与「用量/告警」解耦：独立模块、独立 Spec
-- 评分规则可配置、可审计，避免硬编码
-- Git 是贡献的第一数据源；Cursor API 是效率参考；Hook 是参与信号
-
-### 5.5 激励模块实现
-
-- **计算引擎**：`collector/contribution_engine.py`。从 `git_contributions`、`agent_sessions`、`daily_usage` 三源按周期聚合，按 `incentive_rules` 的权重与上限计算得分，写入 `contribution_scores`（含 per-project 与 aggregate 行）；仅 `hook_adopted=true` 的成员参与排名；写入 `leaderboard_snapshots` 快照。
-- **触发时机**：APScheduler 定时任务（Asia/Shanghai）：每日 00:30（上一日）、每周一 01:00（上一周）、每月 1 日 01:30（上一月）；另支持 `POST /api/incentive-rules/{id}/recalculate` 手动重算。
-- **API**：`GET /api/contributions/my`（成员端，支持 period_type/period_key 返回得分视图）、`GET /api/contributions/leaderboard`（管理端，hook_only 过滤）、`GET/POST/PUT/DELETE /api/incentive-rules` 与重算。
-- **前端**：管理端「排行榜」页（周期选择、CSV 导出）、「激励规则」页（权重滑块、上限、重新计算）；成员端「我的贡献」页（得分卡、历史趋势、项目分布、Hook 状态提示）。E2E 验证清单见 `.kiro/specs/cursor-admin-incentives/E2E_VERIFICATION.md`。
+AI Code Tracking API 返回每个 commit 的 `repoName`，系统通过匹配 `projects.git_repos` 自动将 commit 归属到项目。无需 Hook、无需白名单、无需工作目录匹配。
 
 ---
 
-## 六、文档与规范引用
+## 七、AI 代码贡献（核心数据表）
 
-| 查什么       | 去哪里 |
-|--------------|--------|
-| 架构决策     | 本文档 `docs/ARCHITECTURE.md` |
-| 业务闭环与 Hook、Spec 缺口 | `docs/BUSINESS_LOOP_AND_HOOK.md` |
-| 数据可见性条件与排查 | `docs/DATA_VISIBILITY_AND_TROUBLESHOOTING.md` |
-| 将 Sierac-tm 纳入平台 | `docs/SIERAC-TM-ONBOARDING.md` |
-| Spec 规范    | `.kiro/SPEC_DOCUMENTATION_STANDARD.md` |
-| Spec 总览    | `.kiro/specs/SPEC_TASKS_SCAN.md` |
-| 项目立项设计  | `.kiro/specs/cursor-admin-projects/design.md` |
-| 旧文档归档   | `docs/_archive/` |
+```sql
+-- AI Code Tracking API 同步的 commit 级数据
+ai_code_commits (
+    commit_hash, user_email, repo_name, branch_name,
+    project_id,              -- 通过 repo_name 匹配 projects.git_repos
+    total_lines_added, total_lines_deleted,
+    tab_lines_added, tab_lines_deleted,         -- TAB 补全
+    composer_lines_added, composer_lines_deleted, -- Composer 生成
+    non_ai_lines_added, non_ai_lines_deleted,   -- 手写
+    commit_message, commit_ts, synced_at
+)
+```
+
+这张表回答所有核心问题：
+- **谁**（user_email）在**哪个项目**（project_id）**什么时候**（commit_ts）用 **AI 写了多少代码**（tab + composer lines）
+- AI 代码占比 = (tab + composer) / total
+- 按人按项目按周期聚合 → 贡献度 → 激励分配
 
 ---
 
-**维护者**: 团队  
-**最后更新**: 2026-02-26
+## 八、激励模块
+
+### 8.1 设计原则
+
+- **简单**：3-5 个核心指标，规则透明
+- **自动**：数据全部来自 API，零人工录入
+- **公平**：官方数据无法作假，按贡献分配
+
+### 8.2 激励计算
+
+```
+项目激励池 × 成员在该项目的 AI 代码贡献占比 × 交付系数
+```
+
+- **AI 代码贡献占比**：成员的 AI 代码行数 / 项目全部 AI 代码行数
+- **交付系数**：按时交付 1.0，延期递减（管理员手动设定）
+- 每个周期（月/季度）自动生成激励快照
+
+### 8.3 核心表
+
+- `incentive_rules`：激励规则（周期、权重配置）
+- `contribution_scores`：按人按项目按周期的贡献得分
+- `leaderboard_snapshots`：排行快照（审计用）
+
+---
+
+## 九、已废弃的能力
+
+以下能力在 v3.0 中**正式废弃**，不再维护：
+
+| 废弃项 | 原因 | 替代方案 |
+|--------|------|----------|
+| **Cursor Hook**（Python + Java） | 可被绕开、部署成本高、官方 API 数据更全 | AI Code Tracking API |
+| **白名单准入拦截** | 过度工程，管理手段即可解决 | 项目立项 + 数据透明 |
+| **GitLab 仓库自动创建** | 过度工程 | 手动关联仓库地址 |
+| **Hook 模板注入** | 随 Hook 废弃 | 无需 |
+| **agent_sessions 表** | 数据来源（Hook）已废弃 | ai_code_commits |
+| **git_sync.py**（Git CLI 扫描） | AI Code Tracking API 提供更精确的数据 | ai_code_sync.py |
+| **gitlab_client.py** | 不再需要 GitLab API 集成 | 无需 |
+| **闭环健康/Hook 状态检测** | Hook 已废弃 | 无需 |
+
+---
+
+## 十、集成边界
+
+| 能力 | 自建 | 集成 | 隔离位置 |
+|------|------|------|----------|
+| 项目立项、贡献聚合、激励计算 | ✅ | | collector/*.py |
+| Cursor API 调用 | | ✅ Cursor 官方 | **cursor_api.py 唯一** |
+| 管理端 + 成员端 | ✅ | | web/src |
+| 数据库 | ✅ | PostgreSQL | db/migrations |
+
+**约束**：
+- 所有 Cursor API 调用必须经 `cursor_api.py`，不得在其他模块直接请求。
+- API 层做可插拔适配器模式，便于未来接入其他数据源。
+
+---
+
+## 十一、数据库
+
+- **PostgreSQL 16**，迁移为 SQL 文件幂等执行。
+- 时间字段统一 **TIMESTAMPTZ**。
+- 核心表：`projects`、`members`、`daily_usage`、`spend_snapshots`、`ai_code_commits`、`contribution_scores`、`incentive_rules`、`leaderboard_snapshots`、`alert_rules`、`alert_events`。
+
+---
+
+## 十二、文档引用
+
+| 查什么 | 去哪里 |
+|--------|--------|
+| 架构决策 | 本文档 `docs/ARCHITECTURE.md` |
+| Spec 总览 | `.kiro/specs/SPEC_TASKS_SCAN.md` |
+| 项目立项设计 | `.kiro/specs/cursor-admin-projects/` |
+| AI 代码同步设计 | `.kiro/specs/cursor-admin-ai-tracking/` |
+| 激励设计 | `.kiro/specs/cursor-admin-incentives/` |
+| Cursor API 配置 | `docs/CURSOR-API-SETUP.md` |
+
+---
+
+**维护者**: yeemio  
+**最后更新**: 2026-02-28

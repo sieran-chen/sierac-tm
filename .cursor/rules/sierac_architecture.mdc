@@ -1,5 +1,5 @@
 ---
-description: 架构规范 — 适用于包结构、集成边界、collector、hook 协议、数据库。
+description: 架构规范 — 适用于包结构、集成边界、collector、数据库。
 globs:
   - cursor-admin/**/*.py
   - cursor-admin/**/*.ts
@@ -10,18 +10,18 @@ alwaysApply: false
 ---
 # Sierac-tm 架构规范
 
-> **版本**: v2.1.0 (2026-02-26)
+> **版本**: v3.0.0 (2026-02-28)
 > **架构真源**: `docs/ARCHITECTURE.md`
 
 ---
 
 ## 一、核心实体
 
-**项目（Project）是平台的一等实体**。所有贡献数据、参与数据、成本归属、治理策略都围绕「项目」组织。
+**项目（Project）是平台的一等实体**。所有贡献数据、预算、激励都围绕「项目」组织。
 
-- 管理员在平台「立项」→ 自动在 GitLab 创建仓库（含 Hook）→ 白名单生效。
-- 成员 clone 仓库 → Hook 自动生效 → 白名单校验放行或拦截。
-- 上报数据自动归属到项目；Git 采集、贡献度计算均以已立项项目为范围。
+- 管理员在平台「立项」→ 登记项目信息、关联仓库、设定预算与激励池。
+- 系统通过 AI Code Tracking API 的 `repoName` 匹配 `projects.git_repos`，自动归属贡献数据。
+- 纯服务端，不在成员机器上安装任何东西。
 
 ---
 
@@ -31,31 +31,22 @@ alwaysApply: false
 cursor-admin/
 ├── collector/           # 采集服务（Python, FastAPI）
 │   ├── main.py          # 入口、API、定时任务
-│   ├── sync.py          # Cursor API 同步
-│   ├── git_sync.py      # Git 仓库采集（定时扫描已立项项目）
-│   ├── gitlab_client.py # GitLab API 客户端（仓库创建、Hook 注入、成员管理）
+│   ├── sync.py          # Cursor Admin/Analytics API 同步
+│   ├── ai_code_sync.py  # AI Code Tracking API 同步（核心）
+│   ├── contribution_engine.py  # 贡献度计算与激励分配
 │   ├── alerts.py        # 告警检测与通知
 │   ├── cursor_api.py    # Cursor API 客户端（唯一出口）
 │   ├── database.py      # 连接与迁移
-│   ├── config.py
-│   └── hook_templates/  # Hook 模板文件（立项时注入仓库）
-│       ├── hooks.json
-│       ├── cursor_hook.py
-│       ├── hook_config.json.tmpl
-│       └── gitignore.tmpl
+│   └── config.py
 ├── db/migrations/       # SQL 迁移（幂等）
-│   ├── 001_init.sql
-│   └── 002_projects.sql # 项目、Git 贡献、会话归属
-├── hook/                # 客户端 Hook（模板源 + 全局安装脚本）
-│   ├── cursor_hook.py   # Python 实现
-│   ├── install.sh | .ps1
-│   └── hooks.json 模板
 └── web/                 # 管理端 + 成员端（TypeScript, React）
     └── src/
         └── pages/
-            ├── ProjectsPage.tsx   # 项目管理
-            ├── ProjectDetailPage.tsx  # 项目详情（成本+贡献）
-            └── MyContributionsPage.tsx  # 我的贡献
+            ├── ProjectsPage.tsx        # 项目管理
+            ├── ProjectDetailPage.tsx   # 项目详情
+            ├── MyContributionsPage.tsx  # 我的贡献
+            ├── LeaderboardPage.tsx     # 排行榜
+            └── IncentiveRulesPage.tsx  # 激励规则
 ```
 
 ---
@@ -64,59 +55,54 @@ cursor-admin/
 
 | 能力 | 自建 | 集成 | 隔离位置 |
 |------|------|------|----------|
-| 项目立项、白名单、贡献聚合 | ✅ | | collector/*.py |
-| 采集 API、同步、告警 | ✅ | | collector/*.py |
+| 项目立项、贡献聚合、激励计算 | ✅ | | collector/*.py |
 | Cursor API 调用 | | ✅ Cursor 官方 | **cursor_api.py 唯一** |
-| GitLab 仓库管理 | | ✅ GitLab API v4 | **gitlab_client.py 唯一** |
-| Git 仓库采集 | ✅ | Git CLI | **git_sync.py** |
-| Hook 协议 + 白名单校验 | ✅ | Cursor Hooks 约定 | hook/* + hook_templates/ |
 | 管理端 + 成员端 | ✅ | | web/src |
 | 数据库 | ✅ | PostgreSQL | db/migrations |
 
 **约束**：
-- 所有对 Cursor Admin/Analytics API 的调用必须经 `cursor_api.py`，不得在其他模块直接请求 Cursor。
-- 所有对 GitLab API 的调用必须经 `gitlab_client.py`，不得在其他模块直接请求 GitLab。
-- Hook 与 collector 之间仅通过 HTTP JSON 契约通信。
-- Git 操作集中在 `git_sync.py`，不得在其他模块直接调用 git。
+- 所有 Cursor API 调用必须经 `cursor_api.py`，不得在其他模块直接请求。
+- API 层做可插拔适配器模式，便于未来接入其他数据源。
 
 ---
 
-## 四、数据流（三源融合）
+## 四、数据流
 
 ```
-管理员立项 → POST /api/projects → projects 表（白名单）
+管理员立项 → POST /api/projects → projects 表（名称、仓库、预算、激励池）
     ↓
-gitlab_client.py → GitLab 创建仓库 + 注入 .cursor/ Hook → 回填 repo_url
+AI Code Tracking API → ai_code_sync.py → ai_code_commits 表
+    （commit 级 AI 代码归因，通过 repo_name 匹配 project_id）
     ↓
-成员 clone 仓库 → Hook 自动生效
+Admin API → sync.py → members, daily_usage, spend_snapshots
     ↓
-Hook → 白名单校验 → 放行/拦截 → agent_sessions（标记 project_id）
+贡献度计算 → contribution_engine.py → contribution_scores
+    （按项目+成员+周期聚合，结合激励规则计算得分与分配）
     ↓
-Git 仓库 → git_sync.py 定时扫描 → git_contributions（按项目按人按日）
-    ↓
-Cursor API → sync.py 定时拉取 → daily_usage, spend_snapshots
-    ↓
-贡献度计算 → 融合三源 → contribution_scores
-    ↓
-管理端：按项目看成本与贡献 / 成员端：我的贡献
+管理端：项目维度（预算+贡献）/ 人员维度（排行+激励）
+成员端：我的贡献（AI 代码、效率、激励份额）
 ```
 
 ---
 
-## 五、Hook 分发
+## 五、数据库
 
-- **项目级（主推）**：立项时自动注入 `.cursor/hook/cursor_hook.py` 到仓库，成员 clone 即生效。
-- **全局级（备选）**：通过 `install.sh` / `install.ps1` 安装到 `~/.cursor/hooks/`，用于未立项场景的兜底拦截。
-- **Hook 模板**：`collector/hook_templates/` 维护模板文件，立项时动态替换 `collector_url`、`project_id` 等变量。
-- 行为与协议一致：stdin JSON，stdout JSON；`beforeSubmitPrompt`（白名单校验 + 记录开始）、`stop`（上报会话 + project_id）。
+- **PostgreSQL 16**，迁移为 SQL 文件幂等执行（启动时 `database.init_db()` 按序执行）。
+- 时间字段统一 **TIMESTAMPTZ**。
+- 核心表：`projects`、`members`、`daily_usage`、`spend_snapshots`、`ai_code_commits`、`contribution_scores`、`incentive_rules`、`leaderboard_snapshots`、`alert_rules`、`alert_events`。
 
 ---
 
-## 六、数据库
+## 六、已废弃（v3.0）
 
-- 使用 **PostgreSQL**，迁移为 **SQL 文件幂等执行**（无 Alembic，启动时 `database.init_db()` 按序执行 `db/migrations/*.sql`）。
-- 时间字段统一 **TIMESTAMPTZ**；主键可为自增或 UUID，视表而定。
-- 核心表：`projects`、`members`、`daily_usage`、`spend_snapshots`、`agent_sessions`（含 project_id）、`git_contributions`、`contribution_scores`、`alert_rules`、`alert_events`。
+以下模块/文件在 v3.0 中废弃，不再维护：
+
+- `cursor-admin/hook/` — Hook 客户端（Python + Java）
+- `collector/hook_templates/` — Hook 模板
+- `collector/git_sync.py` — Git CLI 扫描（被 ai_code_sync.py 替代）
+- `collector/gitlab_client.py` — GitLab API 集成
+- `agent_sessions` 表 — Hook 上报数据
+- `git_contributions` 表 — Git CLI 扫描数据
 
 ---
 
@@ -125,10 +111,11 @@ Cursor API → sync.py 定时拉取 → daily_usage, spend_snapshots
 | 查什么 | 去哪里 |
 |--------|--------|
 | 架构决策 | `docs/ARCHITECTURE.md` |
-| 项目立项设计 | `.kiro/specs/cursor-admin-projects/design.md` |
-| 贡献与激励设计 | `.kiro/specs/cursor-admin-incentives/design.md` |
 | Spec 总览 | `.kiro/specs/SPEC_TASKS_SCAN.md` |
+| 项目立项设计 | `.kiro/specs/cursor-admin-projects/` |
+| AI 代码同步设计 | `.kiro/specs/cursor-admin-ai-tracking/` |
+| 激励设计 | `.kiro/specs/cursor-admin-incentives/` |
 
 ---
 
-**执行承诺**：项目为一等实体 · Cursor API 单点出口 · GitLab API 单点出口 · Git 操作集中隔离 · Hook 协议统一 · 文档驱动
+**执行承诺**：项目为一等实体 · Cursor API 单点出口 · 纯服务端无 Hook · 文档驱动

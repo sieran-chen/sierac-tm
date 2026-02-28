@@ -1,76 +1,69 @@
-# Tasks: 贡献可视化与团队激励
+# Tasks: 项目激励（v3.0 重构）
 
-> **状态**：已完成  
-> **最后更新**：2026-02-26
+> **状态**：待重构  
+> **最后更新**：2026-02-28
 
 ---
 
 ## 进度概览
 
-- **总任务数**：15
-- **已完成**：15
-- **进行中**：0
-- **未开始**：0
+- **总任务数**：7
+- **已完成**：0（v3.0 重构，旧任务已归档）
+- **待完成**：7
 
 ---
 
-## Phase 1：数据模型与计算引擎
+## 1. 数据模型
 
-- [x] **Task 1**：创建 `003_incentives.sql` 迁移文件（incentive_rules、contribution_scores、leaderboard_snapshots 表；默认规则初始数据）
-- [x] **Task 2**：实现 `collector/contribution_engine.py`：三源数据聚合 + 权重计算 + 排名更新
-- [x] **Task 3**：Collector 定时任务：每日/每周/每月触发贡献度计算（APScheduler）
-- [x] **Task 4**：单元测试：contribution_engine 计算逻辑（mock DB，覆盖 hook_adopted/未接入/数据缺失场景）
+- [ ] 1.1 更新/新增迁移文件：简化 incentive_rules 和 contribution_scores 表结构，新增 incentive_amount、delivery_factor 字段。
 
 ---
 
-## Phase 2：API
+## 2. 计算引擎
 
-- [x] **Task 5**：Collector 新增 `GET /api/contributions/my`（成员端：我的贡献，含得分、排名、维度明细、项目分布）
-- [x] **Task 6**：Collector 新增 `GET /api/contributions/leaderboard`（管理端：排行榜，支持 hook_only 过滤）
-- [x] **Task 7**：Collector 新增 `GET/POST/PUT/DELETE /api/incentive-rules`（规则 CRUD）
-- [x] **Task 8**：Collector 新增 `POST /api/incentive-rules/{id}/recalculate`（手动触发重新计算）
-
----
-
-## Phase 3：管理端页面
-
-- [x] **Task 9**：管理端新增「排行榜」页面（周期选择、排行表、Hook 状态过滤、CSV 导出）
-- [x] **Task 10**：管理端新增「规则配置」页面（权重可视化、滑块编辑、上限配置、重新计算按钮）
-- [x] **Task 11**：管理端 API client 新增 contributions、incentive-rules 相关类型与方法
+- [ ] 2.1 重写 `contribution_engine.py`：
+  - 数据来源改为 `ai_code_commits`（替代三源融合）
+  - 计算公式：激励池 × 贡献占比 × 交付系数
+  - 移除 Hook 相关逻辑（hook_adopted、session_duration 等）
+- [ ] 2.2 注册定时任务（每周一、每月 1 日）
 
 ---
 
-## Phase 4：成员端页面
+## 3. API
 
-- [x] **Task 12**：成员端新增「我的贡献」页面（得分卡、历史趋势、项目分布、Hook 状态提示）
-- [x] **Task 13**：成员端导航新增「我的贡献」入口
-
----
-
-## Phase 5：验收与收尾
-
-- [x] **Task 14**：端到端验证：立项 → Git commit → Hook 上报 → 计算触发 → 排行榜展示
-- [x] **Task 15**：文档更新：ARCHITECTURE.md §5 补全激励模块实现细节
+- [ ] 3.1 更新 API 路由：
+  - `GET /api/contributions/my`：基于 ai_code_commits 聚合
+  - `GET /api/contributions/leaderboard`：移除 hook_only 过滤
+  - 激励规则 CRUD（简化字段）
+  - 手动重新计算
 
 ---
 
-## 验收清单
+## 4. 前端
 
-- [ ] 贡献度计算覆盖三源数据（git_contributions、agent_sessions、daily_usage）
-- [ ] 未装 Hook 的成员不参与排行（hook_adopted=false）
-- [ ] 权重可配置，修改后可手动重新计算
-- [ ] 管理端排行榜正确展示，支持 Hook 过滤
-- [ ] 成员端「我的贡献」展示个人得分与历史趋势
-- [ ] 历史快照留存，排行可审计
+- [ ] 4.1 更新排行榜页：移除 Hook 状态列，新增激励金额列
+- [ ] 4.2 更新我的贡献页：移除 Hook 引导，展示激励份额
+- [ ] 4.3 更新激励规则页：简化为周期 + 交付系数配置
 
 ---
 
-## 依赖与阻塞
+## 5. 清理
 
-- **阻塞**：cursor-admin-projects 全部完成（需要 projects 表、git_contributions 表、agent_sessions.project_id）
-- **内部依赖**：cursor-admin-core（DB 连接、Collector 框架）
+- [ ] 5.1 移除废弃代码：
+  - hook_adopted 相关逻辑
+  - session_duration_hours 维度
+  - agent_sessions 聚合逻辑
+  - 多维度权重配置 UI
+
+---
+
+## 参考文档
+
+- `.kiro/specs/cursor-admin-incentives/requirements.md`
+- `.kiro/specs/cursor-admin-incentives/design.md`
+- `docs/ARCHITECTURE.md`
 
 ---
 
 **维护者**: 团队  
-**最后更新**: 2026-02-26
+**最后更新**: 2026-02-28

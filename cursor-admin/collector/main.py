@@ -12,10 +12,11 @@ from datetime import date, timedelta
 import asyncpg
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from ai_code_sync import sync_ai_code_commits
 from alerts import check_alerts
 from config import settings
 from contribution_engine import run_calculate_latest
@@ -40,6 +41,12 @@ async def lifespan(app: FastAPI):
         "interval",
         minutes=settings.sync_interval_minutes,
         id="sync",
+    )
+    scheduler.add_job(
+        _job_ai_code_sync,
+        "interval",
+        hours=1,
+        id="ai_code_sync",
     )
     # Contribution score: daily 00:30, weekly Mon 01:00, monthly 1st 01:30 (Asia/Shanghai)
     try:
@@ -89,6 +96,17 @@ async def _sync_and_alert():
         await run_git_collect()
     except Exception as e:
         log.exception("Git collect failed: %s", e)
+    try:
+        await sync_ai_code_commits()
+    except Exception as e:
+        log.exception("AI code sync failed: %s", e)
+
+
+async def _job_ai_code_sync():
+    try:
+        await sync_ai_code_commits()
+    except Exception as e:
+        log.exception("AI code sync job failed: %s", e)
 
 
 async def _job_contribution_daily():
@@ -476,22 +494,25 @@ async def list_alert_events(limit: int = Query(50, ge=1, le=500)):
 class ProjectCreate(BaseModel):
     name: str
     description: str = ""
-    workspace_rules: list[str]
+    git_repos: list[str] = []
     member_emails: list[str] = []
     created_by: str
-    git_repos: list[str] = []
-    auto_create_repo: bool = False
-    repo_slug: str | None = None
-    repo_provider: str | None = None  # 'gitlab' | 'github'; when auto_create_repo, which provider to use
+    budget_amount: float | None = None
+    budget_period: str = "monthly"
+    incentive_pool: float | None = None
+    incentive_rule_id: int | None = None
 
 
 class ProjectUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     git_repos: list[str] | None = None
-    workspace_rules: list[str] | None = None
     member_emails: list[str] | None = None
     status: str | None = None
+    budget_amount: float | None = None
+    budget_period: str | None = None
+    incentive_pool: float | None = None
+    incentive_rule_id: int | None = None
 
 
 @app.get("/api/projects", dependencies=[Depends(require_api_key)])
@@ -510,135 +531,28 @@ async def list_projects(status: str | None = Query(None)):
 
 
 @app.post("/api/projects", dependencies=[Depends(require_api_key)])
-async def create_project(request: Request, body: ProjectCreate):
-    """Create project. If auto_create_repo=true and repo_slug set, create GitLab or GitHub repo and inject Hook."""
+async def create_project(body: ProjectCreate):
+    """Create project (v3.0 lightweight: register info + git_repos, no repo creation or Hook injection)."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            INSERT INTO projects (name, description, git_repos, workspace_rules, member_emails, created_by)
-            VALUES ($1,$2,$3,$4,$5,$6) RETURNING *
+            INSERT INTO projects (name, description, git_repos, member_emails, created_by,
+                                  budget_amount, budget_period, incentive_pool, incentive_rule_id)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *
             """,
             body.name,
             body.description,
             body.git_repos,
-            body.workspace_rules,
             body.member_emails,
             body.created_by,
+            body.budget_amount,
+            body.budget_period,
+            body.incentive_pool,
+            body.incentive_rule_id,
         )
-    project_id = row["id"]
-    collector_url = str(request.base_url).rstrip("/")
-    provider = (body.repo_provider or "gitlab").lower() if body.auto_create_repo and body.repo_slug else None
-
-    if provider == "github":
-        from github_client import GitHubError, github_client
-
-        if github_client.is_configured():
-            try:
-                gh = github_client.create_repo(
-                    name=body.name,
-                    repo_slug=body.repo_slug,
-                    description=body.description or "",
-                    private=True,
-                )
-                async with pool.acquire() as conn:
-                    await conn.execute(
-                        """
-                        UPDATE projects SET repo_provider=$1, github_repo_full_name=$2,
-                            repo_url=$3, repo_ssh_url=$4, git_repos=$5, updated_at=NOW()
-                        WHERE id=$6
-                        """,
-                        "github",
-                        gh.repo_full_name,
-                        gh.repo_url,
-                        gh.repo_ssh_url,
-                        [gh.repo_url],
-                        project_id,
-                    )
-                github_client.push_initial_commit(
-                    gh.repo_full_name,
-                    collector_url=collector_url,
-                    project_id=project_id,
-                    branch=gh.default_branch,
-                )
-                async with pool.acquire() as conn:
-                    await conn.execute(
-                        "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                        project_id,
-                    )
-            except GitHubError as exc:
-                log.warning("GitHub repo create failed for project %s: %s", project_id, exc)
-    elif provider == "gitlab":
-        from gitlab_client import GitLabError, gitlab_client
-
-        if gitlab_client.is_configured():
-            try:
-                gl = gitlab_client.create_project(
-                    name=body.name,
-                    path_slug=body.repo_slug,
-                    description=body.description or "",
-                )
-                async with pool.acquire() as conn:
-                    await conn.execute(
-                        """
-                        UPDATE projects SET repo_provider=$1, gitlab_project_id=$2, repo_url=$3, repo_ssh_url=$4,
-                            git_repos=$5, updated_at=NOW()
-                        WHERE id=$6
-                        """,
-                        "gitlab",
-                        gl.gitlab_project_id,
-                        gl.repo_url,
-                        gl.repo_ssh_url,
-                        [gl.repo_url],
-                        project_id,
-                    )
-                gitlab_client.push_initial_commit(
-                    gl.gitlab_project_id,
-                    collector_url=collector_url,
-                    project_id=project_id,
-                )
-                async with pool.acquire() as conn:
-                    await conn.execute(
-                        "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                        project_id,
-                    )
-                if body.member_emails:
-                    gitlab_client.add_members(gl.gitlab_project_id, body.member_emails)
-            except GitLabError as exc:
-                log.warning("GitLab repo create failed for project %s: %s", project_id, exc)
-
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
     return dict(row)
 
-
-@app.get("/api/projects/whitelist")
-async def get_projects_whitelist():
-    """Return active projects' workspace rules for Hook whitelist check (no API key)."""
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        rows = await conn.fetch(
-            """
-            SELECT id, name, workspace_rules, member_emails, updated_at
-            FROM projects WHERE status='active' ORDER BY id
-            """
-        )
-    if not rows:
-        version = ""
-        rules = []
-    else:
-        latest = max(r["updated_at"] for r in rows)
-        version = latest.isoformat().replace("+00:00", "Z") if hasattr(latest, "isoformat") else str(latest)
-        rules = [
-            {
-                "project_id": r["id"],
-                "project_name": r["name"],
-                "workspace_rules": list(r["workspace_rules"] or []),
-                "member_emails": list(r["member_emails"] or []),
-            }
-            for r in rows
-        ]
-    return {"version": version, "rules": rules}
 
 
 @app.get("/api/projects/{project_id}", dependencies=[Depends(require_api_key)])
@@ -699,57 +613,83 @@ async def get_project_contributions(
 
 @app.get("/api/projects/{project_id}/summary", dependencies=[Depends(require_api_key)])
 async def get_project_summary(project_id: int):
-    """Project summary: cost (session count, duration), participants, Git contributions."""
+    """Project summary: budget, AI code contribution (from ai_code_commits), member breakdown."""
     pool = await get_pool()
     async with pool.acquire() as conn:
         proj = await conn.fetchrow("SELECT * FROM projects WHERE id=$1", project_id)
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
+
     async with pool.acquire() as conn:
-        cost_row = await conn.fetchrow(
+        # AI code contribution totals
+        contrib = await conn.fetchrow(
             """
-            SELECT COUNT(*) AS session_count, COALESCE(SUM(duration_seconds), 0)::bigint AS total_duration_seconds
-            FROM agent_sessions WHERE project_id=$1
+            SELECT
+                COALESCE(SUM(tab_lines_added + composer_lines_added), 0)::int AS total_ai_lines,
+                COALESCE(SUM(total_lines_added), 0)::int AS total_lines,
+                COUNT(DISTINCT commit_hash)::int AS commit_count,
+                COUNT(DISTINCT user_email)::int AS member_count
+            FROM ai_code_commits WHERE project_id = $1
             """,
             project_id,
         )
-        participants = await conn.fetch(
+        # Per-member breakdown
+        members = await conn.fetch(
             """
-            SELECT user_email, COUNT(*) AS session_count, COALESCE(SUM(duration_seconds), 0)::bigint AS total_seconds
-            FROM agent_sessions WHERE project_id=$1 GROUP BY user_email ORDER BY total_seconds DESC
+            SELECT user_email,
+                   SUM(tab_lines_added + composer_lines_added)::int AS ai_lines_added,
+                   SUM(total_lines_added)::int AS total_lines_added,
+                   COUNT(DISTINCT commit_hash)::int AS commit_count
+            FROM ai_code_commits WHERE project_id = $1
+            GROUP BY user_email ORDER BY ai_lines_added DESC
             """,
             project_id,
         )
-        contributions = await conn.fetch(
+        # Budget spend estimate from spend_snapshots (sum for member_emails)
+        member_emails = list(proj["member_emails"] or [])
+        spend_row = await conn.fetchrow(
             """
-            SELECT author_email, commit_date, commit_count, lines_added, lines_removed, files_changed
-            FROM git_contributions WHERE project_id=$1 ORDER BY commit_date DESC, author_email
+            SELECT COALESCE(SUM(spend_cents), 0)::bigint AS total_spend_cents
+            FROM spend_snapshots
+            WHERE billing_cycle_start = (SELECT MAX(billing_cycle_start) FROM spend_snapshots)
+              AND email = ANY($1)
             """,
-            project_id,
-        )
+            member_emails,
+        ) if member_emails else None
+
+    total_ai = contrib["total_ai_lines"] or 0
+    total_lines = contrib["total_lines"] or 0
+    spent_cents = spend_row["total_spend_cents"] if spend_row else 0
+
+    member_list = []
+    for r in members:
+        ai = r["ai_lines_added"] or 0
+        tl = r["total_lines_added"] or 0
+        member_list.append({
+            "user_email": r["user_email"],
+            "ai_lines_added": ai,
+            "total_lines_added": tl,
+            "ai_ratio": round(ai / tl, 4) if tl else 0,
+            "commit_count": r["commit_count"],
+            "contribution_pct": round(ai / total_ai, 4) if total_ai else 0,
+        })
+
     return {
         "project": dict(proj),
-        "session_count": cost_row["session_count"] or 0,
-        "total_duration_seconds": cost_row["total_duration_seconds"] or 0,
-        "participants": [
-            {
-                "user_email": r["user_email"],
-                "session_count": r["session_count"],
-                "total_seconds": r["total_seconds"],
-            }
-            for r in participants
-        ],
-        "contributions": [
-            {
-                "author_email": r["author_email"],
-                "commit_date": r["commit_date"].isoformat() if hasattr(r["commit_date"], "isoformat") else str(r["commit_date"]),
-                "commit_count": r["commit_count"],
-                "lines_added": r["lines_added"],
-                "lines_removed": r["lines_removed"],
-                "files_changed": r["files_changed"],
-            }
-            for r in contributions
-        ],
+        "budget": {
+            "amount": float(proj["budget_amount"]) if proj["budget_amount"] else None,
+            "period": proj["budget_period"],
+            "spent_estimate": round(spent_cents / 100, 2),
+        },
+        "contribution": {
+            "total_ai_lines": total_ai,
+            "total_lines": total_lines,
+            "ai_ratio": round(total_ai / total_lines, 4) if total_lines else 0,
+            "commit_count": contrib["commit_count"] or 0,
+            "member_count": contrib["member_count"] or 0,
+        },
+        "incentive_pool": float(proj["incentive_pool"]) if proj["incentive_pool"] else None,
+        "members": member_list,
     }
 
 
@@ -759,30 +699,17 @@ async def update_project(project_id: int, body: ProjectUpdate):
     updates: list[str] = []
     params: list = []
     idx = 1
-    if body.name is not None:
-        updates.append(f"name=${idx}")
-        params.append(body.name)
-        idx += 1
-    if body.description is not None:
-        updates.append(f"description=${idx}")
-        params.append(body.description)
-        idx += 1
-    if body.git_repos is not None:
-        updates.append(f"git_repos=${idx}")
-        params.append(body.git_repos)
-        idx += 1
-    if body.workspace_rules is not None:
-        updates.append(f"workspace_rules=${idx}")
-        params.append(body.workspace_rules)
-        idx += 1
-    if body.member_emails is not None:
-        updates.append(f"member_emails=${idx}")
-        params.append(body.member_emails)
-        idx += 1
-    if body.status is not None:
-        updates.append(f"status=${idx}")
-        params.append(body.status)
-        idx += 1
+    for field, col in [
+        ("name", "name"), ("description", "description"), ("git_repos", "git_repos"),
+        ("member_emails", "member_emails"), ("status", "status"),
+        ("budget_amount", "budget_amount"), ("budget_period", "budget_period"),
+        ("incentive_pool", "incentive_pool"), ("incentive_rule_id", "incentive_rule_id"),
+    ]:
+        val = getattr(body, field)
+        if val is not None:
+            updates.append(f"{col}=${idx}")
+            params.append(val)
+            idx += 1
     if not updates:
         raise HTTPException(status_code=400, detail="No fields to update")
     updates.append("updated_at=NOW()")
@@ -810,76 +737,6 @@ async def archive_project(project_id: int):
         raise HTTPException(status_code=404, detail="Project not found")
 
 
-@app.post("/api/projects/{project_id}/reinject-hook", dependencies=[Depends(require_api_key)])
-async def reinject_hook(request: Request, project_id: int):
-    """Re-inject Hook files into the project's GitLab or GitHub repository."""
-    pool = await get_pool()
-    async with pool.acquire() as conn:
-        row = await conn.fetchrow(
-            "SELECT id, repo_provider, gitlab_project_id, github_repo_full_name FROM projects WHERE id=$1",
-            project_id,
-        )
-    if not row:
-        raise HTTPException(status_code=404, detail="Project not found")
-    collector_url = str(request.base_url).rstrip("/")
-
-    if row.get("repo_provider") == "github":
-        from github_client import GitHubError, github_client
-
-        full_name = row.get("github_repo_full_name")
-        if not full_name:
-            raise HTTPException(
-                status_code=400,
-                detail="Project has no GitHub repository; create one first or link an existing repo.",
-            )
-        if not github_client.is_configured():
-            raise HTTPException(
-                status_code=503,
-                detail="GitHub not configured; set GITHUB_TOKEN.",
-            )
-        try:
-            github_client.inject_hook_files(
-                full_name,
-                collector_url=collector_url,
-                project_id=project_id,
-            )
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                    project_id,
-                )
-        except GitHubError as exc:
-            log.warning("Reinject hook failed for project %s: %s", project_id, exc)
-            raise HTTPException(status_code=502, detail=f"GitHub error: {exc!s}") from exc
-    else:
-        from gitlab_client import GitLabError, gitlab_client
-
-        gl_id = row.get("gitlab_project_id")
-        if not gl_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Project has no GitLab repository; create one first or link an existing repo.",
-            )
-        if not gitlab_client.is_configured():
-            raise HTTPException(
-                status_code=503,
-                detail="GitLab not configured; set GITLAB_URL, GITLAB_TOKEN, GITLAB_GROUP_ID.",
-            )
-        try:
-            gitlab_client.inject_hook_files(
-                gitlab_project_id=gl_id,
-                collector_url=collector_url,
-                project_id=project_id,
-            )
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE projects SET hook_initialized=TRUE, updated_at=NOW() WHERE id=$1",
-                    project_id,
-                )
-        except GitLabError as exc:
-            log.warning("Reinject hook failed for project %s: %s", project_id, exc)
-            raise HTTPException(status_code=502, detail=f"GitLab error: {exc!s}") from exc
-    return {"ok": True, "message": "Hook files re-injected."}
 
 
 # ─── 成员端：我的贡献 ──────────────────────────────────────────────────────────
@@ -903,71 +760,52 @@ async def get_my_contributions(
             async with pool.acquire() as conn:
                 agg = await conn.fetchrow(
                     """
-                    SELECT hook_adopted, total_score, rank, score_breakdown,
-                           lines_added, lines_removed, commit_count, files_changed,
-                           session_duration_hours, agent_requests
+                    SELECT rank, ai_lines_added, total_lines_added, ai_ratio, commit_count, incentive_amount
                     FROM contribution_scores
-                    WHERE user_email = $1 AND project_id IS NULL AND period_type = $2 AND period_key = $3
+                    WHERE user_email=$1 AND project_id IS NULL AND period_type=$2 AND period_key=$3
                     """,
-                    email,
-                    period_type,
-                    period_key,
+                    email, period_type, period_key,
                 )
                 proj_rows = await conn.fetch(
                     """
-                    SELECT c.project_id, p.name AS project_name, c.total_score
+                    SELECT c.project_id, p.name AS project_name,
+                           c.ai_lines_added, c.total_lines_added, c.ai_ratio,
+                           c.contribution_pct, c.incentive_amount
                     FROM contribution_scores c
                     JOIN projects p ON p.id = c.project_id
-                    WHERE c.user_email = $1 AND c.period_type = $2 AND c.period_key = $3 AND c.project_id IS NOT NULL
-                    ORDER BY c.total_score DESC
+                    WHERE c.user_email=$1 AND c.period_type=$2 AND c.period_key=$3 AND c.project_id IS NOT NULL
+                    ORDER BY c.ai_lines_added DESC
                     """,
-                    email,
-                    period_type,
-                    period_key,
+                    email, period_type, period_key,
                 )
         except asyncpg.UndefinedTableError:
-            return {
-                "user_email": email,
-                "period_type": period_type,
-                "period_key": period_key,
-                "hook_adopted": False,
-                "total_score": 0,
-                "rank": None,
-                "score_breakdown": {},
-                "raw": {"lines_added": 0, "commit_count": 0, "session_duration_hours": 0, "agent_requests": 0, "files_changed": 0},
-                "projects": [],
-            }
+            return {"user_email": email, "period_type": period_type, "period_key": period_key,
+                    "rank": None, "ai_lines_added": 0, "total_lines_added": 0, "ai_ratio": 0,
+                    "commit_count": 0, "incentive_amount": 0, "projects": []}
         if not agg:
-            return {
-                "user_email": email,
-                "period_type": period_type,
-                "period_key": period_key,
-                "hook_adopted": False,
-                "total_score": 0,
-                "rank": None,
-                "score_breakdown": {},
-                "raw": {"lines_added": 0, "commit_count": 0, "session_duration_hours": 0, "agent_requests": 0, "files_changed": 0},
-                "projects": [],
-            }
-        raw = dict(agg)
-        score_breakdown = dict(agg["score_breakdown"] or {})
+            return {"user_email": email, "period_type": period_type, "period_key": period_key,
+                    "rank": None, "ai_lines_added": 0, "total_lines_added": 0, "ai_ratio": 0,
+                    "commit_count": 0, "incentive_amount": 0, "projects": []}
         return {
             "user_email": email,
             "period_type": period_type,
             "period_key": period_key,
-            "hook_adopted": bool(agg["hook_adopted"]),
-            "total_score": float(agg["total_score"]),
             "rank": agg["rank"],
-            "score_breakdown": {k: float(v) for k, v in score_breakdown.items()},
-            "raw": {
-                "lines_added": raw.get("lines_added", 0),
-                "commit_count": raw.get("commit_count", 0),
-                "session_duration_hours": float(raw.get("session_duration_hours") or 0),
-                "agent_requests": raw.get("agent_requests", 0),
-                "files_changed": raw.get("files_changed", 0),
-            },
+            "ai_lines_added": agg["ai_lines_added"],
+            "total_lines_added": agg["total_lines_added"],
+            "ai_ratio": float(agg["ai_ratio"]),
+            "commit_count": agg["commit_count"],
+            "incentive_amount": float(agg["incentive_amount"]),
             "projects": [
-                {"project_id": r["project_id"], "project_name": r["project_name"], "total_score": float(r["total_score"])}
+                {
+                    "project_id": r["project_id"],
+                    "project_name": r["project_name"],
+                    "ai_lines_added": r["ai_lines_added"],
+                    "total_lines_added": r["total_lines_added"],
+                    "ai_ratio": float(r["ai_ratio"]),
+                    "contribution_pct": float(r["contribution_pct"]),
+                    "incentive_amount": float(r["incentive_amount"]),
+                }
                 for r in proj_rows
             ],
         }
@@ -1017,49 +855,29 @@ async def get_my_contributions(
 @app.get("/api/contributions/leaderboard", dependencies=[Depends(require_api_key)])
 async def get_leaderboard(
     period_type: str = Query(..., description="weekly | monthly"),
-    period_key: str = Query(..., description="e.g. 2026-W08"),
-    hook_only: bool = Query(True, description="Only include hook_adopted=true"),
+    period_key: str = Query(..., description="e.g. 2026-W08 or 2026-02"),
 ):
-    """Leaderboard for the given period. hook_only=true (default) filters to members with Hook data."""
+    """Leaderboard for the given period. Ranked by ai_lines_added DESC (all members, no Hook filter)."""
     pool = await get_pool()
     try:
         async with pool.acquire() as conn:
-            if hook_only:
-                rows = await conn.fetch(
-                    """
-                    SELECT user_email, rank, total_score, hook_adopted,
-                           lines_added, commit_count, session_duration_hours, agent_requests, files_changed
-                    FROM contribution_scores
-                    WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL AND hook_adopted = TRUE
-                    ORDER BY rank ASC NULLS LAST, total_score DESC
-                    """,
-                    period_type,
-                    period_key,
-                )
-            else:
-                rows = await conn.fetch(
-                    """
-                    SELECT user_email, rank, total_score, hook_adopted,
-                           lines_added, commit_count, session_duration_hours, agent_requests, files_changed
-                    FROM contribution_scores
-                    WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL
-                    ORDER BY rank ASC NULLS LAST, total_score DESC
-                    """,
-                    period_type,
-                    period_key,
-                )
-            snapshot = await conn.fetchrow(
-                "SELECT created_at FROM leaderboard_snapshots WHERE period_type = $1 AND period_key = $2",
+            rows = await conn.fetch(
+                """
+                SELECT user_email, rank, ai_lines_added, total_lines_added, ai_ratio,
+                       commit_count, incentive_amount
+                FROM contribution_scores
+                WHERE period_type = $1 AND period_key = $2 AND project_id IS NULL
+                ORDER BY rank ASC NULLS LAST, ai_lines_added DESC
+                """,
                 period_type,
                 period_key,
             )
+            snapshot = await conn.fetchrow(
+                "SELECT created_at FROM leaderboard_snapshots WHERE period_type=$1 AND period_key=$2",
+                period_type, period_key,
+            )
     except asyncpg.UndefinedTableError:
-        return {
-            "period_type": period_type,
-            "period_key": period_key,
-            "generated_at": None,
-            "entries": [],
-        }
+        return {"period_type": period_type, "period_key": period_key, "generated_at": None, "entries": []}
     generated_at = snapshot["created_at"].isoformat() if snapshot and snapshot.get("created_at") else None
     return {
         "period_type": period_type,
@@ -1069,10 +887,11 @@ async def get_leaderboard(
             {
                 "rank": r["rank"],
                 "user_email": r["user_email"],
-                "total_score": float(r["total_score"]),
-                "hook_adopted": bool(r["hook_adopted"]),
-                "lines_added": r["lines_added"],
+                "ai_lines_added": r["ai_lines_added"],
+                "total_lines_added": r["total_lines_added"],
+                "ai_ratio": float(r["ai_ratio"]),
                 "commit_count": r["commit_count"],
+                "incentive_amount": float(r["incentive_amount"]),
             }
             for r in rows
         ],
@@ -1284,6 +1103,263 @@ async def recalculate_incentive_rule(rule_id: int):
         raise HTTPException(status_code=404, detail="Incentive rule not found or disabled")
     await run_calculate_latest(row["period_type"], rule_id=rule_id)
     return {"ok": True, "message": f"Recalculated {row['period_type']} for rule {rule_id}."}
+
+
+# ─── AI Code Commits 查询 API ─────────────────────────────────────────────────
+
+
+def _ts(v) -> str | None:
+    return v.isoformat() if v and hasattr(v, "isoformat") else (str(v) if v else None)
+
+
+@app.get("/api/ai-commits", dependencies=[Depends(require_api_key)])
+async def list_ai_commits(
+    project_id: int | None = Query(None),
+    user_email: str | None = Query(None),
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=500),
+):
+    """
+    List ai_code_commits with optional filters.
+    Returns items with ai_lines_added (tab+composer), total_lines_added, ai_ratio, project_name.
+    """
+    pool = await get_pool()
+    conditions: list[str] = []
+    params: list = []
+    idx = 1
+
+    if project_id is not None:
+        conditions.append(f"c.project_id = ${idx}")
+        params.append(project_id)
+        idx += 1
+    if user_email:
+        conditions.append(f"c.user_email = ${idx}")
+        params.append(user_email)
+        idx += 1
+    if start:
+        conditions.append(f"c.commit_ts >= ${idx}")
+        params.append(date.fromisoformat(start))
+        idx += 1
+    if end:
+        conditions.append(f"c.commit_ts < (${idx}::date + INTERVAL '1 day')")
+        params.append(date.fromisoformat(end))
+        idx += 1
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+    offset = (page - 1) * page_size
+
+    async with pool.acquire() as conn:
+        total = await conn.fetchval(
+            f"SELECT COUNT(*) FROM ai_code_commits c {where}", *params
+        )
+        rows = await conn.fetch(
+            f"""
+            SELECT c.commit_hash, c.user_email, c.repo_name, c.branch_name,
+                   c.tab_lines_added + c.composer_lines_added AS ai_lines_added,
+                   c.total_lines_added, c.commit_message, c.commit_ts,
+                   c.project_id, p.name AS project_name
+            FROM ai_code_commits c
+            LEFT JOIN projects p ON p.id = c.project_id
+            {where}
+            ORDER BY c.commit_ts DESC
+            LIMIT {page_size} OFFSET {offset}
+            """,
+            *params,
+        )
+
+    items = []
+    for r in rows:
+        ai = r["ai_lines_added"] or 0
+        total_l = r["total_lines_added"] or 0
+        items.append({
+            "commit_hash": r["commit_hash"],
+            "user_email": r["user_email"],
+            "repo_name": r["repo_name"],
+            "branch_name": r["branch_name"],
+            "project_id": r["project_id"],
+            "project_name": r["project_name"],
+            "ai_lines_added": ai,
+            "total_lines_added": total_l,
+            "ai_ratio": round(ai / total_l, 4) if total_l else 0,
+            "commit_message": r["commit_message"],
+            "commit_ts": _ts(r["commit_ts"]),
+        })
+    return {"total": total, "page": page, "page_size": page_size, "items": items}
+
+
+@app.get("/api/ai-commits/summary", dependencies=[Depends(require_api_key)])
+async def ai_commits_summary(
+    project_id: int | None = Query(None),
+    period: str | None = Query(None, description="monthly | weekly"),
+    period_key: str | None = Query(None, description="e.g. 2026-02 or 2026-W08"),
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+):
+    """
+    Aggregate ai_code_commits by project+member.
+    Supports period filter (monthly/weekly) or explicit start/end.
+    """
+    pool = await get_pool()
+
+    # Resolve date range from period or explicit start/end
+    start_dt: date | None = None
+    end_dt: date | None = None
+    if period and period_key:
+        range_result = None
+        from contribution_engine import period_key_to_date_range
+        range_result = period_key_to_date_range(period, period_key)
+        if range_result:
+            start_dt, end_dt = range_result
+    if start:
+        start_dt = date.fromisoformat(start)
+    if end:
+        end_dt = date.fromisoformat(end)
+
+    conditions: list[str] = []
+    params: list = []
+    idx = 1
+    if project_id is not None:
+        conditions.append(f"c.project_id = ${idx}")
+        params.append(project_id)
+        idx += 1
+    if start_dt:
+        conditions.append(f"c.commit_ts >= ${idx}")
+        params.append(start_dt)
+        idx += 1
+    if end_dt:
+        conditions.append(f"c.commit_ts < (${idx}::date + INTERVAL '1 day')")
+        params.append(end_dt)
+        idx += 1
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT c.project_id, p.name AS project_name, c.user_email,
+                   SUM(c.tab_lines_added + c.composer_lines_added)::int AS ai_lines_added,
+                   SUM(c.total_lines_added)::int AS total_lines_added,
+                   COUNT(DISTINCT c.commit_hash)::int AS commit_count
+            FROM ai_code_commits c
+            LEFT JOIN projects p ON p.id = c.project_id
+            {where}
+            GROUP BY c.project_id, p.name, c.user_email
+            ORDER BY ai_lines_added DESC
+            """,
+            *params,
+        )
+
+    # Group by project
+    projects_map: dict = {}
+    for r in rows:
+        pid = r["project_id"]
+        if pid not in projects_map:
+            projects_map[pid] = {
+                "project_id": pid,
+                "project_name": r["project_name"],
+                "members": [],
+                "totals": {"ai_lines_added": 0, "total_lines_added": 0, "commit_count": 0},
+            }
+        ai = r["ai_lines_added"] or 0
+        total_l = r["total_lines_added"] or 0
+        projects_map[pid]["members"].append({
+            "user_email": r["user_email"],
+            "ai_lines_added": ai,
+            "total_lines_added": total_l,
+            "ai_ratio": round(ai / total_l, 4) if total_l else 0,
+            "commit_count": r["commit_count"],
+        })
+        projects_map[pid]["totals"]["ai_lines_added"] += ai
+        projects_map[pid]["totals"]["total_lines_added"] += total_l
+        projects_map[pid]["totals"]["commit_count"] += r["commit_count"]
+
+    for p in projects_map.values():
+        t = p["totals"]
+        t["ai_ratio"] = round(t["ai_lines_added"] / t["total_lines_added"], 4) if t["total_lines_added"] else 0
+
+    return {
+        "period": period_key,
+        "projects": list(projects_map.values()),
+    }
+
+
+@app.get("/api/ai-commits/my", dependencies=[Depends(require_api_key)])
+async def my_ai_commits(
+    email: str = Query(..., description="Member email"),
+    period: str | None = Query(None, description="monthly | weekly"),
+    period_key: str | None = Query(None, description="e.g. 2026-02 or 2026-W08"),
+    start: str | None = Query(None),
+    end: str | None = Query(None),
+):
+    """Member-facing: my AI code contribution summary with per-project breakdown and trend."""
+    pool = await get_pool()
+
+    start_dt: date | None = None
+    end_dt: date | None = None
+    if period and period_key:
+        from contribution_engine import period_key_to_date_range
+        result = period_key_to_date_range(period, period_key)
+        if result:
+            start_dt, end_dt = result
+    if start:
+        start_dt = date.fromisoformat(start)
+    if end:
+        end_dt = date.fromisoformat(end)
+
+    conditions = ["c.user_email = $1"]
+    params: list = [email]
+    idx = 2
+    if start_dt:
+        conditions.append(f"c.commit_ts >= ${idx}")
+        params.append(start_dt)
+        idx += 1
+    if end_dt:
+        conditions.append(f"c.commit_ts < (${idx}::date + INTERVAL '1 day')")
+        params.append(end_dt)
+        idx += 1
+
+    where = "WHERE " + " AND ".join(conditions)
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            f"""
+            SELECT c.project_id, p.name AS project_name,
+                   SUM(c.tab_lines_added + c.composer_lines_added)::int AS ai_lines_added,
+                   SUM(c.total_lines_added)::int AS total_lines_added,
+                   COUNT(DISTINCT c.commit_hash)::int AS commit_count
+            FROM ai_code_commits c
+            LEFT JOIN projects p ON p.id = c.project_id
+            {where}
+            GROUP BY c.project_id, p.name
+            ORDER BY ai_lines_added DESC
+            """,
+            *params,
+        )
+
+    total_ai = sum(r["ai_lines_added"] or 0 for r in rows)
+    total_lines = sum(r["total_lines_added"] or 0 for r in rows)
+    projects = [
+        {
+            "project_id": r["project_id"],
+            "project_name": r["project_name"],
+            "ai_lines_added": r["ai_lines_added"] or 0,
+            "total_lines_added": r["total_lines_added"] or 0,
+            "ai_ratio": round((r["ai_lines_added"] or 0) / r["total_lines_added"], 4) if r["total_lines_added"] else 0,
+            "commit_count": r["commit_count"],
+        }
+        for r in rows
+    ]
+
+    return {
+        "user_email": email,
+        "period": period_key,
+        "total_ai_lines": total_ai,
+        "total_lines": total_lines,
+        "ai_ratio": round(total_ai / total_lines, 4) if total_lines else 0,
+        "projects": projects,
+    }
 
 
 # ─── 健康检查与闭环健康 ───────────────────────────────────────────────────────

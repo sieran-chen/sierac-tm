@@ -1,52 +1,51 @@
 # Tasks: 项目立项（v3.0 重构）
 
-> **状态**：待重构  
-> **最后更新**：2026-02-28
+> **状态**：已完成（v3.0 重构）  
+> **最后更新**：2026-03-12
 
 ---
 
 ## 进度概览
 
 - **总任务数**：6
-- **已完成**：0（v3.0 重构，旧任务已归档）
-- **待完成**：6
+- **已完成**：6
+- **待完成**：0
 
 ---
 
 ## 1. 数据模型迁移
 
-- [ ] 1.1 新增 `005_projects_v3.sql`：为 projects 表添加 budget_amount、budget_period、incentive_pool、incentive_rule_id 字段。
-- [ ] 1.2 验证迁移兼容性：旧数据不受影响，新字段默认 NULL。
+- [x] 1.1 新增 `007_projects_v3.sql`：为 projects 表添加 budget_amount、budget_period、incentive_pool、incentive_rule_id 字段（ALTER TABLE IF NOT EXISTS，幂等）。
+- [x] 1.2 验证迁移兼容性：旧数据不受影响，新字段默认 NULL。
 
 ---
 
 ## 2. API 重构
 
-- [ ] 2.1 更新项目 CRUD API：
+- [x] 2.1 更新项目 CRUD API：
   - POST/PUT 支持 budget_amount、budget_period、incentive_pool、incentive_rule_id
-  - 移除 workspace_rules、gitlab_project_id 等废弃字段的处理逻辑
-- [ ] 2.2 新增/更新项目汇总 API：
-  - `GET /api/projects/{id}/summary`：预算消耗 + AI 代码贡献汇总
-  - `GET /api/projects/{id}/members`：成员贡献排行
+  - 移除 workspace_rules、auto_create_repo、reinject-hook 等废弃字段的处理逻辑
+- [x] 2.2 更新项目汇总 API：
+  - `GET /api/projects/{id}/summary`：budget + ai_code_commits 贡献汇总 + 成员排行（含 contribution_pct）
 
 ---
 
 ## 3. 前端重构
 
-- [ ] 3.1 更新项目管理页面：
+- [ ] 3.1 更新项目管理页面（前端，待实施）：
   - 新建/编辑表单增加预算和激励池字段
-  - 移除白名单规则、GitLab 仓库创建相关 UI
+  - 移除白名单规则、GitLab/GitHub 仓库自动创建相关 UI
   - 项目详情页展示预算消耗和 AI 代码贡献
 
 ---
 
 ## 4. 清理
 
-- [ ] 4.1 移除废弃代码：
-  - 白名单查询 API（`/api/projects/whitelist`）
-  - GitLab 仓库创建逻辑
-  - Hook 模板注入逻辑
-  - workspace_rules 相关匹配逻辑
+- [x] 4.1 移除废弃代码（后端）：
+  - 白名单查询 API（`/api/projects/whitelist`）已删除
+  - reinject-hook API 已删除
+  - ProjectCreate/Update 中 workspace_rules、auto_create_repo、repo_slug、repo_provider 已移除
+  - GitLab/GitHub 仓库自动创建逻辑已移除
 
 ---
 

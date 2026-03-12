@@ -52,9 +52,9 @@ Phase 4: 废弃代码清理（Hook、git_sync、gitlab_client 等）
 | Spec | 最后更新 | 总任务数 | 已完成 | 待完成 |
 |------|----------|----------|--------|--------|
 | cursor-admin-core | 2026-02-28 | — | 全部 | 0 |
-| cursor-admin-ai-tracking | 2026-02-28 | 7 | 0 | 7 |
-| cursor-admin-projects | 2026-02-28 | 6 | 0 | 6 |
-| cursor-admin-incentives | 2026-02-28 | 7 | 0 | 7 |
+| cursor-admin-ai-tracking | 2026-03-12 | 7 | 6 | 1（5.1 端到端验收） |
+| cursor-admin-projects | 2026-03-12 | 6 | 5 | 1（3.1 前端更新） |
+| cursor-admin-incentives | 2026-03-12 | 7 | 6 | 1（4.1–4.3 前端更新） |
 
 ---
 

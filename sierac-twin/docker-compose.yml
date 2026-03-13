@@ -1,0 +1,18 @@
+services:
+  twin-server:
+    build: ./server
+    ports:
+      - "8100:8100"
+    environment:
+      - TWIN_PORT=8100
+      - TWIN_TICK_INTERVAL=1
+      - TWIN_CORS_ORIGINS=*
+    restart: unless-stopped
+
+  twin-web:
+    build: .
+    ports:
+      - "3100:80"
+    depends_on:
+      - twin-server
+    restart: unless-stopped

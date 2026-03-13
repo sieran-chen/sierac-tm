@@ -1,0 +1,702 @@
+=== DECODED SCENE HIERARCHY ===
+
+0: Unnamed1
+  1: DR2-08B11T-D50X15T-AGL670-RL615
+    2: 双排链滚筒头  [mesh: 双排链滚筒头]
+    3: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  4: DR2-08B11T-D50X15T-AGL670-RL611
+    5: 双排链滚筒头  [mesh: 双排链滚筒头]
+    6: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  7: DR2-08B11T-D50X15T-AGL670-RL613
+    8: 双排链滚筒头  [mesh: 双排链滚筒头]
+    9: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  10: DR2-08B11T-D50X15T-AGL670-RL614
+    11: 双排链滚筒头  [mesh: 双排链滚筒头]
+    12: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  13: DR2-08B11T-D50X15T-AGL670-RL610_ASM
+    14: 双排链滚筒头  [mesh: 双排链滚筒头]
+    15: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  16: DR2-08B11T-D50X15T-AGL670-RL612
+    17: 双排链滚筒头  [mesh: 双排链滚筒头]
+    18: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  19: DR2-08B11T-D50X15T-AGL670-RL616
+    20: 双排链滚筒头  [mesh: 双排链滚筒头]
+    21: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  22: TC-004
+    23: Solid036  [mesh: Solid036]
+    24: Compound029  [mesh: Compound029]
+  25: TC-03
+    26: Solid036  [mesh: Solid036]
+    27: Compound029  [mesh: Compound029]
+  28: Shell016  [mesh: Shell016]
+  29: Compound020  [mesh: Compound020]
+  30: SS-04  [mesh: SS-04]
+  31: Solid029  [mesh: Solid029]
+  32: Shell017  [mesh: Shell017]
+  33: Solid030  [mesh: Solid030]
+  34: 无动力滚筒  [mesh: 无动力滚筒]
+  35: Shell018  [mesh: Shell018]
+  36: Shell019  [mesh: Shell019]
+  37: Compound022  [mesh: Compound022]
+  38: Compound023  [mesh: Compound023]
+  39: Shell020  [mesh: Shell020]
+  40: Shell021  [mesh: Shell021]
+  41: SS-10-01  [mesh: SS-10-01]
+  42: Compound024  [mesh: Compound024]
+  43: SS-01  [mesh: SS-01]
+  44: Solid001  [mesh: Solid001]
+  45: Shell001  [mesh: Shell001]
+  46: Compound  [mesh: Compound]
+  47: 双排链滚筒头  [mesh: 双排链滚筒头]
+  48: Shell  [mesh: Shell]
+  49: Shell002  [mesh: Shell002]
+  50: 0005  [mesh: 0005]
+  51: SS-07-03
+    52: Solid007  [mesh: Solid007]
+    53: Compound004  [mesh: Compound004]
+  54: SS-07-006  [mesh: SS-07-01]
+  55: SS-07-007  [mesh: SS-07-01]
+  56: SS-07-008  [mesh: SS-07-02]
+  57: SS-07-005  [mesh: SS-07-02]
+  58: SS-07-004  [mesh: SS-07-02]
+  59: SS-000_ASM
+    60: SS-05  [mesh: SS-05]
+    61: SS-04  [mesh: SS-04]
+    62: 无动力滚筒  [mesh: 无动力滚筒]
+    63: 无动力滚筒001
+      64: Solid029  [mesh: Solid029]
+      65: Compound020  [mesh: Compound020]
+    66: 无动力滚筒002
+      67: Solid029  [mesh: Solid029]
+      68: Compound020  [mesh: Compound020]
+    69: 无动力滚筒003
+      70: Solid029  [mesh: Solid029]
+      71: Compound020  [mesh: Compound020]
+    72: 无动力滚筒004
+      73: Solid029  [mesh: Solid029]
+      74: Compound020  [mesh: Compound020]
+    75: 无动力滚筒005
+      76: Solid029  [mesh: Solid029]
+      77: Compound020  [mesh: Compound020]
+    78: 无动力滚筒006
+      79: Solid029  [mesh: Solid029]
+      80: Compound020  [mesh: Compound020]
+    81: 无动力滚筒007
+      82: Solid029  [mesh: Solid029]
+      83: Compound020  [mesh: Compound020]
+    84: 无动力滚筒008
+      85: Solid029  [mesh: Solid029]
+      86: Compound020  [mesh: Compound020]
+    87: SS-06
+      88: Solid030  [mesh: Solid030]
+      89: Compound024  [mesh: Compound024]
+    90: 脚撑2  [mesh: 脚撑2]
+    91: 脚撑003
+      92: SS-10  [mesh: SS-10]
+      93: SS-012
+        94: Solid017  [mesh: Solid017]
+        95: Compound008  [mesh: Compound008]
+      96: SS-013
+        97: Solid017  [mesh: Solid017]
+        98: Compound008  [mesh: Compound008]
+      99: M16地脚_G004
+        100: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+      101: M16地脚_G005
+        102: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  103: SS-07-011  [mesh: SS-07-06]
+  104: SS-07-07
+    105: Solid009  [mesh: Solid009]
+    106: Compound005  [mesh: Compound005]
+  107: SS-07-012  [mesh: SS-07-05]
+  108: SS-07-010  [mesh: SS-07-06]
+  109: SS-07-013  [mesh: SS-07-05]
+  110: SS-07-014  [mesh: SS-07-05]
+  111: M16地脚_G002
+    112: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  113: ARTICULATED_F2103-1_1-107Z_G_ASM
+    114: ARTICULATED_F2103-1_1-301Z_G  [mesh: ARTICULATED_F2103-1_1-301Z_G]
+    115: ARTICULATED_F2103-1_2Z_G  [mesh: ARTICULATED_F2103-1_2Z_G]
+    116: ARTICULATED_F2103-1_3Z_G  [mesh: ARTICULATED_F2103-1_3Z_G]
+    117: ARTICULATED_F2103-1_4Z_G  [mesh: ARTICULATED_F2103-1_4Z_G]
+  118: M16_G00_ASM
+    119: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  120: M16地脚_G001
+    121: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  122: SS-009
+    123: Solid017  [mesh: Solid017]
+    124: Compound008  [mesh: Compound008]
+  125: SS-08
+    126: Solid017  [mesh: Solid017]
+    127: Compound008  [mesh: Compound008]
+  128: SS-010
+    129: Solid017  [mesh: Solid017]
+    130: Compound008  [mesh: Compound008]
+  131: SS-07_ASM
+    132: SS-07-01  [mesh: SS-07-01]
+    133: SS-07-02  [mesh: SS-07-02]
+    134: SS-07-03
+      135: Solid007  [mesh: Solid007]
+      136: Compound004  [mesh: Compound004]
+    137: SS-07-004  [mesh: SS-07-02]
+    138: SS-07-005  [mesh: SS-07-02]
+    139: SS-07-006  [mesh: SS-07-01]
+    140: SS-07-007  [mesh: SS-07-01]
+    141: SS-07-008  [mesh: SS-07-02]
+    142: SS-07-009  [mesh: SS-07-02]
+    143: SS-07-06  [mesh: SS-07-06]
+    144: SS-07-010  [mesh: SS-07-06]
+    145: SS-07-07
+      146: Solid009  [mesh: Solid009]
+      147: Compound005  [mesh: Compound005]
+    148: SS-07-011  [mesh: SS-07-06]
+    149: SS-07-05  [mesh: SS-07-05]
+    150: SS-07-012  [mesh: SS-07-05]
+    151: SS-07-013  [mesh: SS-07-05]
+    152: SS-07-014  [mesh: SS-07-05]
+    153: SS-07-08  [mesh: SS-07-08]
+    154: SS-07-04
+      155: Solid012  [mesh: Solid012]
+      156: Shell007  [mesh: Shell007]
+    157: SS-07-015
+      158: Solid012  [mesh: Solid012]
+      159: Shell007  [mesh: Shell007]
+    160: SS-07-016
+      161: Solid012  [mesh: Solid012]
+      162: Shell007  [mesh: Shell007]
+    163: SS-07-017
+      164: Solid012  [mesh: Solid012]
+      165: Shell007  [mesh: Shell007]
+    166: M16地脚_G  [mesh: M16地脚_G]
+    167: M16地脚_G001
+      168: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    169: M16地脚_G002
+      170: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    171: M16地脚_G003
+      172: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    173: SS-08
+      174: Solid017  [mesh: Solid017]
+      175: Compound008  [mesh: Compound008]
+    176: SS-009
+      177: Solid017  [mesh: Solid017]
+      178: Compound008  [mesh: Compound008]
+    179: SS-010
+      180: Solid017  [mesh: Solid017]
+      181: Compound008  [mesh: Compound008]
+    182: SS-011
+      183: Solid017  [mesh: Solid017]
+      184: Compound008  [mesh: Compound008]
+  185: 050_25_WZ_71B14_KZ_W_B3_ASM_3_ASM
+    186: PRT0271  [mesh: PRT0271]
+    187: PRT0273  [mesh: PRT0273]
+    188: PRT0274  [mesh: PRT0274]
+    189: PRT0275  [mesh: PRT0275]
+    190: PRT0272  [mesh: PRT0272]
+  191: M16地脚_G003
+    192: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  193: SS-011
+    194: Solid017  [mesh: Solid017]
+    195: Compound008  [mesh: Compound008]
+  196: 脚撑2  [mesh: 脚撑2]
+  197: TC-01  [mesh: TC-01]
+  198: Solid036  [mesh: Solid036]
+  199: SS-10  [mesh: SS-10]
+  200: SS-000  [mesh: SS-000]
+  201: TC-02  [mesh: TC-02]
+  202: Shell027  [mesh: Shell027]
+  203: _SE-40550_SE  [mesh: _SE-40550_SE]
+  204: Compound029  [mesh: Compound029]
+  205: Shell026  [mesh: Shell026]
+  206: TC-04  [mesh: TC-04]
+  207: _SE-40X550-S_0__R  [mesh: _SE-40X550-S_0__R]
+  208: F-M12X125F  [mesh: F-M12X125F]
+  209: SE40X550S_000_____1  [mesh: SE40X550S_000_____1]
+  210: _SE-40-M12X1_25_-_NUT  [mesh: _SE-40-M12X1_25_-_NUT]
+  211: SE40X550S_000____  [mesh: SE40X550S_000____]
+  212: 200_ASM
+    213: SS-10  [mesh: SS-10]
+    214: SS-012
+      215: Solid017  [mesh: Solid017]
+      216: Compound008  [mesh: Compound008]
+    217: SS-013
+      218: Solid017  [mesh: Solid017]
+      219: Compound008  [mesh: Compound008]
+    220: M16地脚_G004
+      221: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    222: M16地脚_G005
+      223: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  224: 脚撑003
+    225: SS-10  [mesh: SS-10]
+    226: SS-012
+      227: Solid017  [mesh: Solid017]
+      228: Compound008  [mesh: Compound008]
+    229: SS-013
+      230: Solid017  [mesh: Solid017]
+      231: Compound008  [mesh: Compound008]
+    232: M16地脚_G004
+      233: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    234: M16地脚_G005
+      235: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  236: SS-013
+    237: Solid017  [mesh: Solid017]
+    238: Compound008  [mesh: Compound008]
+  239: SS-012
+    240: Solid017  [mesh: Solid017]
+    241: Compound008  [mesh: Compound008]
+  242: M16地脚_G004
+    243: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  244: M16地脚_G005
+    245: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  246: Shell035  [mesh: Shell035]
+  247: Shell036  [mesh: Shell036]
+  248: Shell037  [mesh: Shell037]
+  249: Solid043  [mesh: Solid043]
+  250: Compound032  [mesh: Compound032]
+  251: Shell038  [mesh: Shell038]
+  252: Compound033  [mesh: Compound033]
+  253: 剔除  [mesh: 剔除]
+  254: Shell039  [mesh: Shell039]
+  255: Shell040  [mesh: Shell040]
+  256: LMF20LUUZ_E  [mesh: LMF20LUUZ_E]
+  257: SS-11  [mesh: SS-11]
+  258: 0007
+    259: Solid029  [mesh: Solid029]
+    260: Compound020  [mesh: Compound020]
+  261: 无动力滚筒002
+    262: Solid029  [mesh: Solid029]
+    263: Compound020  [mesh: Compound020]
+  264: 无动力滚筒004
+    265: Solid029  [mesh: Solid029]
+    266: Compound020  [mesh: Compound020]
+  267: 无动力滚筒003
+    268: Solid029  [mesh: Solid029]
+    269: Compound020  [mesh: Compound020]
+  270: 无动力滚筒001
+    271: Solid029  [mesh: Solid029]
+    272: Compound020  [mesh: Compound020]
+  273: 无动力滚筒005
+    274: Solid029  [mesh: Solid029]
+    275: Compound020  [mesh: Compound020]
+  276: Shell004  [mesh: Shell004]
+  277: Shell003  [mesh: Shell003]
+  278: SS-07-06  [mesh: SS-07-06]
+  279: Solid007  [mesh: Solid007]
+  280: Compound004  [mesh: Compound004]
+  281: Compound005  [mesh: Compound005]
+  282: Solid009  [mesh: Solid009]
+  283: Shell006  [mesh: Shell006]
+  284: Shell005  [mesh: Shell005]
+  285: SS-07-08  [mesh: SS-07-08]
+  286: Solid012  [mesh: Solid012]
+  287: SS-07-05  [mesh: SS-07-05]
+  288: Shell007  [mesh: Shell007]
+  289: ARTICULATED_F2103-1_2Z_G  [mesh: ARTICULATED_F2103-1_2Z_G]
+  290: ARTICULATED_F2103-1_1-301Z_G  [mesh: ARTICULATED_F2103-1_1-301Z_G]
+  291: ARTICULATED_F2103-1_3Z_G  [mesh: ARTICULATED_F2103-1_3Z_G]
+  292: Solid017  [mesh: Solid017]
+  293: ARTICULATED_F2103-1_4Z_G  [mesh: ARTICULATED_F2103-1_4Z_G]
+  294: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  295: M16地脚_G  [mesh: M16地脚_G]
+  296: Compound008  [mesh: Compound008]
+  297: SS-07  [mesh: SS-07]
+  298: Shell009  [mesh: Shell009]
+  299: Shell008  [mesh: Shell008]
+  300: Shell011  [mesh: Shell011]
+  301: Shell013  [mesh: Shell013]
+  302: Solid018  [mesh: Solid018]
+  303: Shell010  [mesh: Shell010]
+  304: Shell012  [mesh: Shell012]
+  305: PRT0271_3  [mesh: PRT0271_3]
+  306: PRT0273  [mesh: PRT0273]
+  307: PRT0271  [mesh: PRT0271]
+  308: Compound010  [mesh: Compound010]
+  309: PRT0273_3  [mesh: PRT0273_3]
+  310: SS-06
+    311: Solid030  [mesh: Solid030]
+    312: Compound024  [mesh: Compound024]
+  313: SS-10-02  [mesh: SS-10-02]
+  314: Solid033  [mesh: Solid033]
+  315: Shell024  [mesh: Shell024]
+  316: Shell022  [mesh: Shell022]
+  317: Shell023  [mesh: Shell023]
+  318: Compound025  [mesh: Compound025]
+  319: Shell025  [mesh: Shell025]
+  320: TC-05
+    321: Solid042  [mesh: Solid042]
+    322: Compound032  [mesh: Compound032]
+  323: LMF20LUUZ_E001  [mesh: LMF20LUUZ_E]
+  324: 无动力滚筒007
+    325: Solid029  [mesh: Solid029]
+    326: Compound020  [mesh: Compound020]
+  327: TC-06
+    328: Solid043  [mesh: Solid043]
+    329: Compound033  [mesh: Compound033]
+  330: 无动力滚筒008
+    331: Solid029  [mesh: Solid029]
+    332: Compound020  [mesh: Compound020]
+  333: 无动力滚筒006
+    334: Solid029  [mesh: Solid029]
+    335: Compound020  [mesh: Compound020]
+  336: SS-014  [mesh: SS-11]
+  337: 0004_ASM
+    338: SS-00  [mesh: SS-00]
+    339: SS-000  [mesh: SS-000]
+    340: 剔除  [mesh: 剔除]
+    341: SS-11  [mesh: SS-11]
+    342: SS-014  [mesh: SS-11]
+    343: SS-015  [mesh: SS-11]
+    344: SS-016  [mesh: SS-11]
+  345: 00_ASM
+    346: TC-01  [mesh: TC-01]
+    347: TC-02  [mesh: TC-02]
+    348: TC-03
+      349: Solid036  [mesh: Solid036]
+      350: Compound029  [mesh: Compound029]
+    351: TC-004
+      352: Solid036  [mesh: Solid036]
+      353: Compound029  [mesh: Compound029]
+    354: TC-04  [mesh: TC-04]
+    355: SE40X550S_000____  [mesh: SE40X550S_000____]
+    356: TC-005  [mesh: TC-04]
+    357: F-M12X125F  [mesh: F-M12X125F]
+    358: TC-05
+      359: Solid042  [mesh: Solid042]
+      360: Compound032  [mesh: Compound032]
+    361: TC-06
+      362: Solid043  [mesh: Solid043]
+      363: Compound033  [mesh: Compound033]
+    364: LMF20LUUZ_E  [mesh: LMF20LUUZ_E]
+    365: LMF20LUUZ_E001  [mesh: LMF20LUUZ_E]
+  366: SS-015  [mesh: SS-11]
+  367: SS-016  [mesh: SS-11]
+  368: Solid042  [mesh: Solid042]
+  369: Shell029  [mesh: Shell029]
+  370: Shell028  [mesh: Shell028]
+  371: Shell030  [mesh: Shell030]
+  372: Shell031  [mesh: Shell031]
+  373: Shell034  [mesh: Shell034]
+  374: Shell033  [mesh: Shell033]
+  375: Shell032  [mesh: Shell032]
+  376: SS-07-017
+    377: Solid012  [mesh: Solid012]
+    378: Shell007  [mesh: Shell007]
+  379: SS-07-04
+    380: Solid012  [mesh: Solid012]
+    381: Shell007  [mesh: Shell007]
+  382: SS-07-015
+    383: Solid012  [mesh: Solid012]
+    384: Shell007  [mesh: Shell007]
+  385: SS-07-016
+    386: Solid012  [mesh: Solid012]
+    387: Shell007  [mesh: Shell007]
+  388: DL-01
+    389: Solid018  [mesh: Solid018]
+    390: Compound010  [mesh: Compound010]
+  391: 0006  [mesh: 0006]
+  392: SS-03  [mesh: SS-03]
+  393: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+  394: DR2-08B11T-D50X15T-AGL670-RL610  [mesh: DR2-08B11T-D50X15T-AGL670-RL610]
+  395: SS-07-02  [mesh: SS-07-02]
+  396: SS-07-01  [mesh: SS-07-01]
+  397: DL-00_ASM
+    398: DL-01
+      399: Solid018  [mesh: Solid018]
+      400: Compound010  [mesh: Compound010]
+    401: 050_25_WZ_71B14_KZ_W_B3_ASM_3  [mesh: 050_25_WZ_71B14_KZ_W_B3_ASM_3]
+    402: DL-02  [mesh: DL-02]
+    403: DL-03
+      404: Solid025  [mesh: Solid025]
+      405: Compound017  [mesh: Compound017]
+  406: DL-03
+    407: Solid025  [mesh: Solid025]
+    408: Compound017  [mesh: Compound017]
+  409: SS-00_ASM
+    410: SS-01  [mesh: SS-01]
+    411: SS-02
+      412: Solid001  [mesh: Solid001]
+      413: Compound  [mesh: Compound]
+    414: DR2-08B11T-D50X15T-AGL670-RL610  [mesh: DR2-08B11T-D50X15T-AGL670-RL610]
+    415: DR2-08B11T-D50X15T-AGL670-RL611
+      416: 双排链滚筒头  [mesh: 双排链滚筒头]
+      417: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    418: DR2-08B11T-D50X15T-AGL670-RL612
+      419: 双排链滚筒头  [mesh: 双排链滚筒头]
+      420: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    421: DR2-08B11T-D50X15T-AGL670-RL613
+      422: 双排链滚筒头  [mesh: 双排链滚筒头]
+      423: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    424: DR2-08B11T-D50X15T-AGL670-RL614
+      425: 双排链滚筒头  [mesh: 双排链滚筒头]
+      426: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    427: DR2-08B11T-D50X15T-AGL670-RL615
+      428: 双排链滚筒头  [mesh: 双排链滚筒头]
+      429: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    430: DR2-08B11T-D50X15T-AGL670-RL616
+      431: 双排链滚筒头  [mesh: 双排链滚筒头]
+      432: 双排链滚筒尾  [mesh: 双排链滚筒尾]
+    433: SS-03  [mesh: SS-03]
+    434: SS-07  [mesh: SS-07]
+    435: DL-00  [mesh: DL-00]
+    436: SS-09  [mesh: SS-09]
+  437: SS-10-03
+    438: Solid033  [mesh: Solid033]
+    439: Compound025  [mesh: Compound025]
+  440: SS-07-009  [mesh: SS-07-02]
+  441: SS-10-003  [mesh: SS-10-01]
+  442: SS-10-004  [mesh: SS-10-02]
+  443: SS-07-019
+    444: Solid012  [mesh: Solid012]
+    445: Shell007  [mesh: Shell007]
+  446: SS-07-018
+    447: Solid012  [mesh: Solid012]
+    448: Shell007  [mesh: Shell007]
+  449: SS-07-021  [mesh: SS-07-05]
+  450: SS-07-020  [mesh: SS-07-05]
+  451: SS-10_ASM
+    452: SS-10-01  [mesh: SS-10-01]
+    453: SS-10-02  [mesh: SS-10-02]
+    454: SS-10-003  [mesh: SS-10-01]
+    455: SS-10-004  [mesh: SS-10-02]
+    456: SS-07-018
+      457: Solid012  [mesh: Solid012]
+      458: Shell007  [mesh: Shell007]
+    459: SS-07-019
+      460: Solid012  [mesh: Solid012]
+      461: Shell007  [mesh: Shell007]
+    462: SS-10-03
+      463: Solid033  [mesh: Solid033]
+      464: Compound025  [mesh: Compound025]
+    465: SS-07-020  [mesh: SS-07-05]
+    466: SS-07-021  [mesh: SS-07-05]
+  467: PRT0274_3  [mesh: PRT0274_3]
+  468: PRT0274  [mesh: PRT0274]
+  469: PRT0275  [mesh: PRT0275]
+  470: 050_25_WZ_71B14_KZ_W_B3_ASM_3  [mesh: 050_25_WZ_71B14_KZ_W_B3_ASM_3]
+  471: PRT0272_3  [mesh: PRT0272_3]
+  472: PRT0275_3  [mesh: PRT0275_3]
+  473: PRT0272  [mesh: PRT0272]
+  474: Shell015  [mesh: Shell015]
+  475: DL-02  [mesh: DL-02]
+  476: Solid025  [mesh: Solid025]
+  477: Shell014  [mesh: Shell014]
+  478: Compound017  [mesh: Compound017]
+  479: SS-05  [mesh: SS-05]
+  480: DL-00  [mesh: DL-00]
+  481: SS-00  [mesh: SS-00]
+  482: SS-09  [mesh: SS-09]
+  483: SS-02
+    484: Solid001  [mesh: Solid001]
+    485: Compound  [mesh: Compound]
+  486: SE40X550S_000_____1_ASM
+    487: _SE-40550_SE  [mesh: _SE-40550_SE]
+    488: _SE-40X550-S_0__R  [mesh: _SE-40X550-S_0__R]
+    489: _SE-40-M12X1_25_-_NUT  [mesh: _SE-40-M12X1_25_-_NUT]
+  490: SE40X550S_000_____ASM
+    491: SE40X550S_000_____1  [mesh: SE40X550S_000_____1]
+  492: TC-005  [mesh: TC-04]
+
+Total nodes: 493
+Total meshes: 383
+
+=== UNIQUE NODE NAMES (201) ===
+
+  0004_ASM
+  0005
+  0006
+  0007
+  00_ASM
+  050_25_WZ_71B14_KZ_W_B3_ASM_3
+  050_25_WZ_71B14_KZ_W_B3_ASM_3_ASM
+  200_ASM
+  ARTICULATED_F2103-1_1-107Z_G
+  ARTICULATED_F2103-1_1-107Z_G_ASM
+  ARTICULATED_F2103-1_1-301Z_G
+  ARTICULATED_F2103-1_2Z_G
+  ARTICULATED_F2103-1_3Z_G
+  ARTICULATED_F2103-1_4Z_G
+  Compound
+  Compound004
+  Compound005
+  Compound008
+  Compound010
+  Compound017
+  Compound020
+  Compound022
+  Compound023
+  Compound024
+  Compound025
+  Compound029
+  Compound032
+  Compound033
+  DL-00
+  DL-00_ASM
+  DL-01
+  DL-02
+  DL-03
+  DR2-08B11T-D50X15T-AGL670-RL610
+  DR2-08B11T-D50X15T-AGL670-RL610_ASM
+  DR2-08B11T-D50X15T-AGL670-RL611
+  DR2-08B11T-D50X15T-AGL670-RL612
+  DR2-08B11T-D50X15T-AGL670-RL613
+  DR2-08B11T-D50X15T-AGL670-RL614
+  DR2-08B11T-D50X15T-AGL670-RL615
+  DR2-08B11T-D50X15T-AGL670-RL616
+  F-M12X125F
+  LMF20LUUZ_E
+  LMF20LUUZ_E001
+  M16_G00_ASM
+  M16地脚_G
+  M16地脚_G001
+  M16地脚_G002
+  M16地脚_G003
+  M16地脚_G004
+  M16地脚_G005
+  PRT0271
+  PRT0271_3
+  PRT0272
+  PRT0272_3
+  PRT0273
+  PRT0273_3
+  PRT0274
+  PRT0274_3
+  PRT0275
+  PRT0275_3
+  SE40X550S_000____
+  SE40X550S_000_____1
+  SE40X550S_000_____1_ASM
+  SE40X550S_000_____ASM
+  SS-00
+  SS-000
+  SS-000_ASM
+  SS-009
+  SS-00_ASM
+  SS-01
+  SS-010
+  SS-011
+  SS-012
+  SS-013
+  SS-014
+  SS-015
+  SS-016
+  SS-02
+  SS-03
+  SS-04
+  SS-05
+  SS-06
+  SS-07
+  SS-07-004
+  SS-07-005
+  SS-07-006
+  SS-07-007
+  SS-07-008
+  SS-07-009
+  SS-07-01
+  SS-07-010
+  SS-07-011
+  SS-07-012
+  SS-07-013
+  SS-07-014
+  SS-07-015
+  SS-07-016
+  SS-07-017
+  SS-07-018
+  SS-07-019
+  SS-07-02
+  SS-07-020
+  SS-07-021
+  SS-07-03
+  SS-07-04
+  SS-07-05
+  SS-07-06
+  SS-07-07
+  SS-07-08
+  SS-07_ASM
+  SS-08
+  SS-09
+  SS-10
+  SS-10-003
+  SS-10-004
+  SS-10-01
+  SS-10-02
+  SS-10-03
+  SS-10_ASM
+  SS-11
+  Shell
+  Shell001
+  Shell002
+  Shell003
+  Shell004
+  Shell005
+  Shell006
+  Shell007
+  Shell008
+  Shell009
+  Shell010
+  Shell011
+  Shell012
+  Shell013
+  Shell014
+  Shell015
+  Shell016
+  Shell017
+  Shell018
+  Shell019
+  Shell020
+  Shell021
+  Shell022
+  Shell023
+  Shell024
+  Shell025
+  Shell026
+  Shell027
+  Shell028
+  Shell029
+  Shell030
+  Shell031
+  Shell032
+  Shell033
+  Shell034
+  Shell035
+  Shell036
+  Shell037
+  Shell038
+  Shell039
+  Shell040
+  Solid001
+  Solid007
+  Solid009
+  Solid012
+  Solid017
+  Solid018
+  Solid025
+  Solid029
+  Solid030
+  Solid033
+  Solid036
+  Solid042
+  Solid043
+  TC-004
+  TC-005
+  TC-01
+  TC-02
+  TC-03
+  TC-04
+  TC-05
+  TC-06
+  Unnamed1
+  _SE-40-M12X1_25_-_NUT
+  _SE-40550_SE
+  _SE-40X550-S_0__R
+  剔除
+  双排链滚筒头
+  双排链滚筒尾
+  无动力滚筒
+  无动力滚筒001
+  无动力滚筒002
+  无动力滚筒003
+  无动力滚筒004
+  无动力滚筒005
+  无动力滚筒006
+  无动力滚筒007
+  无动力滚筒008
+  脚撑003
+  脚撑2

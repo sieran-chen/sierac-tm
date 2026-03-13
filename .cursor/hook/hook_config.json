@@ -2,5 +2,7 @@
   "collector_url": "http://8.130.50.168:8000",
   "user_email": "",
   "machine_id": "",
-  "timeout_seconds": 5
+  "timeout_seconds": 5,
+  "whitelist_ttl_seconds": 300,
+  "whitelist_enabled": true
 }

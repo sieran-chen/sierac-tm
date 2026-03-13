@@ -1,0 +1,90 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [active] [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - heading "项目参与（按项目聚合）" [level=1] [ref=e57]
+      - paragraph [ref=e58]: 按项目与成员汇总 Agent 会话；未关联项目的会话显示为「未归属」。
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: 成员
+          - combobox [ref=e62]:
+            - option "全部" [selected]
+            - option "chenjie@sierac.cn"
+            - option "PENGFEI CHEN"
+            - option "lxy@sierac.cn"
+            - option "zhoushengmeng@sierac.cn"
+        - generic [ref=e63]:
+          - generic [ref=e64]: 项目
+          - combobox [ref=e65]:
+            - option "全部" [selected]
+        - generic [ref=e66]:
+          - generic [ref=e67]: 开始
+          - textbox [ref=e68]: 2026-02-13
+        - generic [ref=e69]:
+          - generic [ref=e70]: 结束
+          - textbox [ref=e71]: 2026-02-27
+      - generic [ref=e72]:
+        - button "汇总视图" [ref=e73] [cursor=pointer]
+        - button "会话明细" [ref=e74] [cursor=pointer]
+      - generic [ref=e75]:
+        - generic [ref=e76]: 按项目 + 成员汇总
+        - table [ref=e77]:
+          - rowgroup [ref=e78]:
+            - row "项目 成员 会话数 累计时长 最近活跃" [ref=e79]:
+              - columnheader "项目" [ref=e80]
+              - columnheader "成员" [ref=e81]
+              - columnheader "会话数" [ref=e82]
+              - columnheader "累计时长" [ref=e83]
+              - columnheader "最近活跃" [ref=e84]
+          - rowgroup [ref=e85]:
+            - row "暂无参与数据 数据来自 Hook 上报的 agent_sessions（含 project_id）。未关联项目的会话会显示为「未归属」。" [ref=e86]:
+              - cell "暂无参与数据 数据来自 Hook 上报的 agent_sessions（含 project_id）。未关联项目的会话会显示为「未归属」。" [ref=e87]:
+                - paragraph [ref=e88]: 暂无参与数据
+                - paragraph [ref=e89]: 数据来自 Hook 上报的 agent_sessions（含 project_id）。未关联项目的会话会显示为「未归属」。
+```

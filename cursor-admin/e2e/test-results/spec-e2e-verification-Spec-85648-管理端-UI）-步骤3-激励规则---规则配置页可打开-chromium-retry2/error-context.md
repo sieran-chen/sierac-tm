@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - heading "激励规则配置" [level=1] [ref=e57]
+      - paragraph [ref=e58]: 配置贡献度权重与上限；修改后点击「重新计算」使当前周期生效。
+      - generic [ref=e60]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - text: 默认规则
+            - generic [ref=e63]: "周期: weekly"
+          - generic [ref=e64]:
+            - button "编辑" [ref=e65] [cursor=pointer]
+            - button "重新计算" [ref=e66] [cursor=pointer]
+        - generic [ref=e70]: 权重
+```

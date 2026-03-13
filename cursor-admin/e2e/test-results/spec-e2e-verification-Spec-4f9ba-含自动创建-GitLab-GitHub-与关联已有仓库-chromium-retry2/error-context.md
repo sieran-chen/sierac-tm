@@ -1,0 +1,170 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - heading "项目管理" [level=1] [ref=e58]
+        - generic [ref=e59]:
+          - button "刷新" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - text: 刷新
+          - button "新建项目" [active] [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+            - text: 新建项目
+      - generic [ref=e68]:
+        - generic [ref=e69]: 状态
+        - combobox [ref=e70]:
+          - option "全部"
+          - option "启用" [selected]
+          - option "已归档"
+      - table [ref=e72]:
+        - rowgroup [ref=e73]:
+          - row "项目名称 描述 工作目录规则 仓库状态 状态 创建时间 操作" [ref=e74]:
+            - columnheader "项目名称" [ref=e75]
+            - columnheader "描述" [ref=e76]
+            - columnheader "工作目录规则" [ref=e77]
+            - columnheader "仓库状态" [ref=e78]
+            - columnheader "状态" [ref=e79]
+            - columnheader "创建时间" [ref=e80]
+            - columnheader "操作" [ref=e81]
+        - rowgroup [ref=e82]:
+          - row "sierac-tm — 1 条 未创建 启用 2026-02-26" [ref=e83]:
+            - cell "sierac-tm" [ref=e84]:
+              - link "sierac-tm" [ref=e85] [cursor=pointer]:
+                - /url: /projects/1
+            - cell "—" [ref=e86]
+            - cell "1 条" [ref=e87]
+            - cell "未创建" [ref=e88]:
+              - generic [ref=e89]: 未创建
+            - cell "启用" [ref=e90]:
+              - generic [ref=e91]: 启用
+            - cell "2026-02-26" [ref=e92]
+            - cell [ref=e93]:
+              - generic [ref=e94]:
+                - button "编辑" [ref=e95] [cursor=pointer]:
+                  - img [ref=e96]
+                - button "归档" [ref=e98] [cursor=pointer]:
+                  - img [ref=e99]
+          - row "Test Project — 1 条 未创建 启用 2026-02-26" [ref=e102]:
+            - cell "Test Project" [ref=e103]:
+              - link "Test Project" [ref=e104] [cursor=pointer]:
+                - /url: /projects/2
+            - cell "—" [ref=e105]
+            - cell "1 条" [ref=e106]
+            - cell "未创建" [ref=e107]:
+              - generic [ref=e108]: 未创建
+            - cell "启用" [ref=e109]:
+              - generic [ref=e110]: 启用
+            - cell "2026-02-26" [ref=e111]
+            - cell [ref=e112]:
+              - generic [ref=e113]:
+                - button "编辑" [ref=e114] [cursor=pointer]:
+                  - img [ref=e115]
+                - button "归档" [ref=e117] [cursor=pointer]:
+                  - img [ref=e118]
+          - row "Test Project — 1 条 未创建 启用 2026-02-27" [ref=e121]:
+            - cell "Test Project" [ref=e122]:
+              - link "Test Project" [ref=e123] [cursor=pointer]:
+                - /url: /projects/3
+            - cell "—" [ref=e124]
+            - cell "1 条" [ref=e125]
+            - cell "未创建" [ref=e126]:
+              - generic [ref=e127]: 未创建
+            - cell "启用" [ref=e128]:
+              - generic [ref=e129]: 启用
+            - cell "2026-02-27" [ref=e130]
+            - cell [ref=e131]:
+              - generic [ref=e132]:
+                - button "编辑" [ref=e133] [cursor=pointer]:
+                  - img [ref=e134]
+                - button "归档" [ref=e136] [cursor=pointer]:
+                  - img [ref=e137]
+      - generic [ref=e141]:
+        - heading "新建项目" [level=2] [ref=e142]
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - generic [ref=e145]: 项目名称 *
+            - textbox "如 Sierac-tm" [ref=e146]
+          - generic [ref=e147]:
+            - generic [ref=e148]: 描述
+            - textbox "简要说明" [ref=e149]
+          - generic [ref=e150]:
+            - generic [ref=e151]: 工作目录规则 *（一行一条路径前缀）
+            - textbox "D:\\AI\\Sierac-tm /home/dev/sierac-tm" [ref=e152]:
+              - /placeholder: "D:\\AI\\Sierac-tm\n/home/dev/sierac-tm"
+          - generic [ref=e153]:
+            - generic [ref=e154]: 参与成员邮箱（一行一个，留空表示全员）
+            - textbox "可选" [ref=e155]
+          - generic [ref=e156]:
+            - generic [ref=e157]: 仓库创建方式
+            - generic [ref=e158]:
+              - generic [ref=e159] [cursor=pointer]:
+                - radio "关联已有仓库" [checked] [ref=e160]
+                - generic [ref=e161]: 关联已有仓库
+              - generic [ref=e162] [cursor=pointer]:
+                - radio "自动创建（GitLab）" [ref=e163]
+                - generic [ref=e164]: 自动创建（GitLab）
+              - generic [ref=e165] [cursor=pointer]:
+                - radio "自动创建（GitHub）" [ref=e166]
+                - generic [ref=e167]: 自动创建（GitHub）
+            - paragraph [ref=e168]: 保存后，在工作目录符合规则的 Cursor 会话将自动归属到本项目。成员需在对应目录下使用 Cursor，会话才会被计入。
+            - generic [ref=e169]:
+              - generic [ref=e170]: 已有仓库地址 *（一行一个，用于 Git 采集与贡献统计）
+              - textbox "https://github.com/org/repo.git 或 git@github.com:org/repo.git" [ref=e171]:
+                - /placeholder: "https://github.com/org/repo.git\n或 git@github.com:org/repo.git"
+              - paragraph [ref=e172]: 填写后，采集服务会定时拉取该仓库的 commit 并计入贡献；不填则无 Git 相关数据。
+          - generic [ref=e173]:
+            - generic [ref=e174]: 创建人邮箱 *
+            - textbox "admin@company.com" [ref=e175]
+        - generic [ref=e176]:
+          - button "取消" [ref=e177] [cursor=pointer]
+          - button "保存" [disabled]:
+            - img
+            - text: 保存
+```

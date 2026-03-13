@@ -1,0 +1,889 @@
+=== SCENE HIERARCHY ===
+
+0: Unnamed1
+  1: DR2-08B11T-D50X15T-AGL670-RL615
+    2: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    3: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  4: DR2-08B11T-D50X15T-AGL670-RL611
+    5: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    6: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  7: DR2-08B11T-D50X15T-AGL670-RL613
+    8: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    9: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  10: DR2-08B11T-D50X15T-AGL670-RL614
+    11: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    12: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  13: DR2-08B11T-D50X15T-AGL670-RL610_ASM
+    14: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    15: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  16: DR2-08B11T-D50X15T-AGL670-RL612
+    17: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    18: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  19: DR2-08B11T-D50X15T-AGL670-RL616
+    20: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+    21: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  22: TC-004
+    23: Solid036  [mesh: Solid036]
+    24: Compound029  [mesh: Compound029]
+  25: TC-03
+    26: Solid036  [mesh: Solid036]
+    27: Compound029  [mesh: Compound029]
+  28: Shell016  [mesh: Shell016]
+  29: Compound020  [mesh: Compound020]
+  30: SS-04  [mesh: SS-04]
+  31: Solid029  [mesh: Solid029]
+  32: Shell017  [mesh: Shell017]
+  33: Solid030  [mesh: Solid030]
+  34: \X2\65E052A8529B6EDA7B52\X0\  [mesh: \X2\65E052A8529B6EDA7B52\X0\]
+  35: Shell018  [mesh: Shell018]
+  36: Shell019  [mesh: Shell019]
+  37: Compound022  [mesh: Compound022]
+  38: Compound023  [mesh: Compound023]
+  39: Shell020  [mesh: Shell020]
+  40: Shell021  [mesh: Shell021]
+  41: SS-10-01  [mesh: SS-10-01]
+  42: Compound024  [mesh: Compound024]
+  43: SS-01  [mesh: SS-01]
+  44: Solid001  [mesh: Solid001]
+  45: Shell001  [mesh: Shell001]
+  46: Compound  [mesh: Compound]
+  47: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+  48: Shell  [mesh: Shell]
+  49: Shell002  [mesh: Shell002]
+  50: 0005  [mesh: 0005]
+  51: SS-07-03
+    52: Solid007  [mesh: Solid007]
+    53: Compound004  [mesh: Compound004]
+  54: SS-07-006  [mesh: SS-07-01]
+  55: SS-07-007  [mesh: SS-07-01]
+  56: SS-07-008  [mesh: SS-07-02]
+  57: SS-07-005  [mesh: SS-07-02]
+  58: SS-07-004  [mesh: SS-07-02]
+  59: SS-000_ASM
+    60: SS-05  [mesh: SS-05]
+    61: SS-04  [mesh: SS-04]
+    62: \X2\65E052A8529B6EDA7B52\X0\  [mesh: \X2\65E052A8529B6EDA7B52\X0\]
+    63: \X2\65E052A8529B6EDA7B52\X0\001
+      64: Solid029  [mesh: Solid029]
+      65: Compound020  [mesh: Compound020]
+    66: \X2\65E052A8529B6EDA7B52\X0\002
+      67: Solid029  [mesh: Solid029]
+      68: Compound020  [mesh: Compound020]
+    69: \X2\65E052A8529B6EDA7B52\X0\003
+      70: Solid029  [mesh: Solid029]
+      71: Compound020  [mesh: Compound020]
+    72: \X2\65E052A8529B6EDA7B52\X0\004
+      73: Solid029  [mesh: Solid029]
+      74: Compound020  [mesh: Compound020]
+    75: \X2\65E052A8529B6EDA7B52\X0\005
+      76: Solid029  [mesh: Solid029]
+      77: Compound020  [mesh: Compound020]
+    78: \X2\65E052A8529B6EDA7B52\X0\006
+      79: Solid029  [mesh: Solid029]
+      80: Compound020  [mesh: Compound020]
+    81: \X2\65E052A8529B6EDA7B52\X0\007
+      82: Solid029  [mesh: Solid029]
+      83: Compound020  [mesh: Compound020]
+    84: \X2\65E052A8529B6EDA7B52\X0\008
+      85: Solid029  [mesh: Solid029]
+      86: Compound020  [mesh: Compound020]
+    87: SS-06
+      88: Solid030  [mesh: Solid030]
+      89: Compound024  [mesh: Compound024]
+    90: \X2\811A6491\X0\2  [mesh: \X2\811A6491\X0\2]
+    91: \X2\811A6491\X0\003
+      92: SS-10  [mesh: SS-10]
+      93: SS-012
+        94: Solid017  [mesh: Solid017]
+        95: Compound008  [mesh: Compound008]
+      96: SS-013
+        97: Solid017  [mesh: Solid017]
+        98: Compound008  [mesh: Compound008]
+      99: M16\X2\5730811A\X0\_G004
+        100: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+      101: M16\X2\5730811A\X0\_G005
+        102: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  103: SS-07-011  [mesh: SS-07-06]
+  104: SS-07-07
+    105: Solid009  [mesh: Solid009]
+    106: Compound005  [mesh: Compound005]
+  107: SS-07-012  [mesh: SS-07-05]
+  108: SS-07-010  [mesh: SS-07-06]
+  109: SS-07-013  [mesh: SS-07-05]
+  110: SS-07-014  [mesh: SS-07-05]
+  111: M16\X2\5730811A\X0\_G002
+    112: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  113: ARTICULATED_F2103-1_1-107Z_G_ASM
+    114: ARTICULATED_F2103-1_1-301Z_G  [mesh: ARTICULATED_F2103-1_1-301Z_G]
+    115: ARTICULATED_F2103-1_2Z_G  [mesh: ARTICULATED_F2103-1_2Z_G]
+    116: ARTICULATED_F2103-1_3Z_G  [mesh: ARTICULATED_F2103-1_3Z_G]
+    117: ARTICULATED_F2103-1_4Z_G  [mesh: ARTICULATED_F2103-1_4Z_G]
+  118: M16_G00_ASM
+    119: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  120: M16\X2\5730811A\X0\_G001
+    121: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  122: SS-009
+    123: Solid017  [mesh: Solid017]
+    124: Compound008  [mesh: Compound008]
+  125: SS-08
+    126: Solid017  [mesh: Solid017]
+    127: Compound008  [mesh: Compound008]
+  128: SS-010
+    129: Solid017  [mesh: Solid017]
+    130: Compound008  [mesh: Compound008]
+  131: SS-07_ASM
+    132: SS-07-01  [mesh: SS-07-01]
+    133: SS-07-02  [mesh: SS-07-02]
+    134: SS-07-03
+      135: Solid007  [mesh: Solid007]
+      136: Compound004  [mesh: Compound004]
+    137: SS-07-004  [mesh: SS-07-02]
+    138: SS-07-005  [mesh: SS-07-02]
+    139: SS-07-006  [mesh: SS-07-01]
+    140: SS-07-007  [mesh: SS-07-01]
+    141: SS-07-008  [mesh: SS-07-02]
+    142: SS-07-009  [mesh: SS-07-02]
+    143: SS-07-06  [mesh: SS-07-06]
+    144: SS-07-010  [mesh: SS-07-06]
+    145: SS-07-07
+      146: Solid009  [mesh: Solid009]
+      147: Compound005  [mesh: Compound005]
+    148: SS-07-011  [mesh: SS-07-06]
+    149: SS-07-05  [mesh: SS-07-05]
+    150: SS-07-012  [mesh: SS-07-05]
+    151: SS-07-013  [mesh: SS-07-05]
+    152: SS-07-014  [mesh: SS-07-05]
+    153: SS-07-08  [mesh: SS-07-08]
+    154: SS-07-04
+      155: Solid012  [mesh: Solid012]
+      156: Shell007  [mesh: Shell007]
+    157: SS-07-015
+      158: Solid012  [mesh: Solid012]
+      159: Shell007  [mesh: Shell007]
+    160: SS-07-016
+      161: Solid012  [mesh: Solid012]
+      162: Shell007  [mesh: Shell007]
+    163: SS-07-017
+      164: Solid012  [mesh: Solid012]
+      165: Shell007  [mesh: Shell007]
+    166: M16\X2\5730811A\X0\_G  [mesh: M16\X2\5730811A\X0\_G]
+    167: M16\X2\5730811A\X0\_G001
+      168: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    169: M16\X2\5730811A\X0\_G002
+      170: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    171: M16\X2\5730811A\X0\_G003
+      172: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    173: SS-08
+      174: Solid017  [mesh: Solid017]
+      175: Compound008  [mesh: Compound008]
+    176: SS-009
+      177: Solid017  [mesh: Solid017]
+      178: Compound008  [mesh: Compound008]
+    179: SS-010
+      180: Solid017  [mesh: Solid017]
+      181: Compound008  [mesh: Compound008]
+    182: SS-011
+      183: Solid017  [mesh: Solid017]
+      184: Compound008  [mesh: Compound008]
+  185: 050_25_WZ_71B14_KZ_W_B3_ASM_3_ASM
+    186: PRT0271  [mesh: PRT0271]
+    187: PRT0273  [mesh: PRT0273]
+    188: PRT0274  [mesh: PRT0274]
+    189: PRT0275  [mesh: PRT0275]
+    190: PRT0272  [mesh: PRT0272]
+  191: M16\X2\5730811A\X0\_G003
+    192: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  193: SS-011
+    194: Solid017  [mesh: Solid017]
+    195: Compound008  [mesh: Compound008]
+  196: \X2\811A6491\X0\2  [mesh: \X2\811A6491\X0\2]
+  197: TC-01  [mesh: TC-01]
+  198: Solid036  [mesh: Solid036]
+  199: SS-10  [mesh: SS-10]
+  200: SS-000  [mesh: SS-000]
+  201: TC-02  [mesh: TC-02]
+  202: Shell027  [mesh: Shell027]
+  203: _SE-40550_SE  [mesh: _SE-40550_SE]
+  204: Compound029  [mesh: Compound029]
+  205: Shell026  [mesh: Shell026]
+  206: TC-04  [mesh: TC-04]
+  207: _SE-40X550-S_0__R  [mesh: _SE-40X550-S_0__R]
+  208: F-M12X125F  [mesh: F-M12X125F]
+  209: SE40X550S_000_____1  [mesh: SE40X550S_000_____1]
+  210: _SE-40-M12X1_25_-_NUT  [mesh: _SE-40-M12X1_25_-_NUT]
+  211: SE40X550S_000____  [mesh: SE40X550S_000____]
+  212: 200_ASM
+    213: SS-10  [mesh: SS-10]
+    214: SS-012
+      215: Solid017  [mesh: Solid017]
+      216: Compound008  [mesh: Compound008]
+    217: SS-013
+      218: Solid017  [mesh: Solid017]
+      219: Compound008  [mesh: Compound008]
+    220: M16\X2\5730811A\X0\_G004
+      221: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    222: M16\X2\5730811A\X0\_G005
+      223: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  224: \X2\811A6491\X0\003
+    225: SS-10  [mesh: SS-10]
+    226: SS-012
+      227: Solid017  [mesh: Solid017]
+      228: Compound008  [mesh: Compound008]
+    229: SS-013
+      230: Solid017  [mesh: Solid017]
+      231: Compound008  [mesh: Compound008]
+    232: M16\X2\5730811A\X0\_G004
+      233: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+    234: M16\X2\5730811A\X0\_G005
+      235: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  236: SS-013
+    237: Solid017  [mesh: Solid017]
+    238: Compound008  [mesh: Compound008]
+  239: SS-012
+    240: Solid017  [mesh: Solid017]
+    241: Compound008  [mesh: Compound008]
+  242: M16\X2\5730811A\X0\_G004
+    243: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  244: M16\X2\5730811A\X0\_G005
+    245: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  246: Shell035  [mesh: Shell035]
+  247: Shell036  [mesh: Shell036]
+  248: Shell037  [mesh: Shell037]
+  249: Solid043  [mesh: Solid043]
+  250: Compound032  [mesh: Compound032]
+  251: Shell038  [mesh: Shell038]
+  252: Compound033  [mesh: Compound033]
+  253: \X2\52549664\X0\  [mesh: \X2\52549664\X0\]
+  254: Shell039  [mesh: Shell039]
+  255: Shell040  [mesh: Shell040]
+  256: LMF20LUUZ_E  [mesh: LMF20LUUZ_E]
+  257: SS-11  [mesh: SS-11]
+  258: 0007
+    259: Solid029  [mesh: Solid029]
+    260: Compound020  [mesh: Compound020]
+  261: \X2\65E052A8529B6EDA7B52\X0\002
+    262: Solid029  [mesh: Solid029]
+    263: Compound020  [mesh: Compound020]
+  264: \X2\65E052A8529B6EDA7B52\X0\004
+    265: Solid029  [mesh: Solid029]
+    266: Compound020  [mesh: Compound020]
+  267: \X2\65E052A8529B6EDA7B52\X0\003
+    268: Solid029  [mesh: Solid029]
+    269: Compound020  [mesh: Compound020]
+  270: \X2\65E052A8529B6EDA7B52\X0\001
+    271: Solid029  [mesh: Solid029]
+    272: Compound020  [mesh: Compound020]
+  273: \X2\65E052A8529B6EDA7B52\X0\005
+    274: Solid029  [mesh: Solid029]
+    275: Compound020  [mesh: Compound020]
+  276: Shell004  [mesh: Shell004]
+  277: Shell003  [mesh: Shell003]
+  278: SS-07-06  [mesh: SS-07-06]
+  279: Solid007  [mesh: Solid007]
+  280: Compound004  [mesh: Compound004]
+  281: Compound005  [mesh: Compound005]
+  282: Solid009  [mesh: Solid009]
+  283: Shell006  [mesh: Shell006]
+  284: Shell005  [mesh: Shell005]
+  285: SS-07-08  [mesh: SS-07-08]
+  286: Solid012  [mesh: Solid012]
+  287: SS-07-05  [mesh: SS-07-05]
+  288: Shell007  [mesh: Shell007]
+  289: ARTICULATED_F2103-1_2Z_G  [mesh: ARTICULATED_F2103-1_2Z_G]
+  290: ARTICULATED_F2103-1_1-301Z_G  [mesh: ARTICULATED_F2103-1_1-301Z_G]
+  291: ARTICULATED_F2103-1_3Z_G  [mesh: ARTICULATED_F2103-1_3Z_G]
+  292: Solid017  [mesh: Solid017]
+  293: ARTICULATED_F2103-1_4Z_G  [mesh: ARTICULATED_F2103-1_4Z_G]
+  294: ARTICULATED_F2103-1_1-107Z_G  [mesh: ARTICULATED_F2103-1_1-107Z_G]
+  295: M16\X2\5730811A\X0\_G  [mesh: M16\X2\5730811A\X0\_G]
+  296: Compound008  [mesh: Compound008]
+  297: SS-07  [mesh: SS-07]
+  298: Shell009  [mesh: Shell009]
+  299: Shell008  [mesh: Shell008]
+  300: Shell011  [mesh: Shell011]
+  301: Shell013  [mesh: Shell013]
+  302: Solid018  [mesh: Solid018]
+  303: Shell010  [mesh: Shell010]
+  304: Shell012  [mesh: Shell012]
+  305: PRT0271_3  [mesh: PRT0271_3]
+  306: PRT0273  [mesh: PRT0273]
+  307: PRT0271  [mesh: PRT0271]
+  308: Compound010  [mesh: Compound010]
+  309: PRT0273_3  [mesh: PRT0273_3]
+  310: SS-06
+    311: Solid030  [mesh: Solid030]
+    312: Compound024  [mesh: Compound024]
+  313: SS-10-02  [mesh: SS-10-02]
+  314: Solid033  [mesh: Solid033]
+  315: Shell024  [mesh: Shell024]
+  316: Shell022  [mesh: Shell022]
+  317: Shell023  [mesh: Shell023]
+  318: Compound025  [mesh: Compound025]
+  319: Shell025  [mesh: Shell025]
+  320: TC-05
+    321: Solid042  [mesh: Solid042]
+    322: Compound032  [mesh: Compound032]
+  323: LMF20LUUZ_E001  [mesh: LMF20LUUZ_E]
+  324: \X2\65E052A8529B6EDA7B52\X0\007
+    325: Solid029  [mesh: Solid029]
+    326: Compound020  [mesh: Compound020]
+  327: TC-06
+    328: Solid043  [mesh: Solid043]
+    329: Compound033  [mesh: Compound033]
+  330: \X2\65E052A8529B6EDA7B52\X0\008
+    331: Solid029  [mesh: Solid029]
+    332: Compound020  [mesh: Compound020]
+  333: \X2\65E052A8529B6EDA7B52\X0\006
+    334: Solid029  [mesh: Solid029]
+    335: Compound020  [mesh: Compound020]
+  336: SS-014  [mesh: SS-11]
+  337: 0004_ASM
+    338: SS-00  [mesh: SS-00]
+    339: SS-000  [mesh: SS-000]
+    340: \X2\52549664\X0\  [mesh: \X2\52549664\X0\]
+    341: SS-11  [mesh: SS-11]
+    342: SS-014  [mesh: SS-11]
+    343: SS-015  [mesh: SS-11]
+    344: SS-016  [mesh: SS-11]
+  345: 00_ASM
+    346: TC-01  [mesh: TC-01]
+    347: TC-02  [mesh: TC-02]
+    348: TC-03
+      349: Solid036  [mesh: Solid036]
+      350: Compound029  [mesh: Compound029]
+    351: TC-004
+      352: Solid036  [mesh: Solid036]
+      353: Compound029  [mesh: Compound029]
+    354: TC-04  [mesh: TC-04]
+    355: SE40X550S_000____  [mesh: SE40X550S_000____]
+    356: TC-005  [mesh: TC-04]
+    357: F-M12X125F  [mesh: F-M12X125F]
+    358: TC-05
+      359: Solid042  [mesh: Solid042]
+      360: Compound032  [mesh: Compound032]
+    361: TC-06
+      362: Solid043  [mesh: Solid043]
+      363: Compound033  [mesh: Compound033]
+    364: LMF20LUUZ_E  [mesh: LMF20LUUZ_E]
+    365: LMF20LUUZ_E001  [mesh: LMF20LUUZ_E]
+  366: SS-015  [mesh: SS-11]
+  367: SS-016  [mesh: SS-11]
+  368: Solid042  [mesh: Solid042]
+  369: Shell029  [mesh: Shell029]
+  370: Shell028  [mesh: Shell028]
+  371: Shell030  [mesh: Shell030]
+  372: Shell031  [mesh: Shell031]
+  373: Shell034  [mesh: Shell034]
+  374: Shell033  [mesh: Shell033]
+  375: Shell032  [mesh: Shell032]
+  376: SS-07-017
+    377: Solid012  [mesh: Solid012]
+    378: Shell007  [mesh: Shell007]
+  379: SS-07-04
+    380: Solid012  [mesh: Solid012]
+    381: Shell007  [mesh: Shell007]
+  382: SS-07-015
+    383: Solid012  [mesh: Solid012]
+    384: Shell007  [mesh: Shell007]
+  385: SS-07-016
+    386: Solid012  [mesh: Solid012]
+    387: Shell007  [mesh: Shell007]
+  388: DL-01
+    389: Solid018  [mesh: Solid018]
+    390: Compound010  [mesh: Compound010]
+  391: 0006  [mesh: 0006]
+  392: SS-03  [mesh: SS-03]
+  393: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+  394: DR2-08B11T-D50X15T-AGL670-RL610  [mesh: DR2-08B11T-D50X15T-AGL670-RL610]
+  395: SS-07-02  [mesh: SS-07-02]
+  396: SS-07-01  [mesh: SS-07-01]
+  397: DL-00_ASM
+    398: DL-01
+      399: Solid018  [mesh: Solid018]
+      400: Compound010  [mesh: Compound010]
+    401: 050_25_WZ_71B14_KZ_W_B3_ASM_3  [mesh: 050_25_WZ_71B14_KZ_W_B3_ASM_3]
+    402: DL-02  [mesh: DL-02]
+    403: DL-03
+      404: Solid025  [mesh: Solid025]
+      405: Compound017  [mesh: Compound017]
+  406: DL-03
+    407: Solid025  [mesh: Solid025]
+    408: Compound017  [mesh: Compound017]
+  409: SS-00_ASM
+    410: SS-01  [mesh: SS-01]
+    411: SS-02
+      412: Solid001  [mesh: Solid001]
+      413: Compound  [mesh: Compound]
+    414: DR2-08B11T-D50X15T-AGL670-RL610  [mesh: DR2-08B11T-D50X15T-AGL670-RL610]
+    415: DR2-08B11T-D50X15T-AGL670-RL611
+      416: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      417: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    418: DR2-08B11T-D50X15T-AGL670-RL612
+      419: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      420: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    421: DR2-08B11T-D50X15T-AGL670-RL613
+      422: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      423: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    424: DR2-08B11T-D50X15T-AGL670-RL614
+      425: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      426: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    427: DR2-08B11T-D50X15T-AGL670-RL615
+      428: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      429: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    430: DR2-08B11T-D50X15T-AGL670-RL616
+      431: \X2\53CC639294FE6EDA7B525934\X0\  [mesh: \X2\53CC639294FE6EDA7B525934\X0\]
+      432: \X2\53CC639294FE6EDA7B525C3E\X0\  [mesh: \X2\53CC639294FE6EDA7B525C3E\X0\]
+    433: SS-03  [mesh: SS-03]
+    434: SS-07  [mesh: SS-07]
+    435: DL-00  [mesh: DL-00]
+    436: SS-09  [mesh: SS-09]
+  437: SS-10-03
+    438: Solid033  [mesh: Solid033]
+    439: Compound025  [mesh: Compound025]
+  440: SS-07-009  [mesh: SS-07-02]
+  441: SS-10-003  [mesh: SS-10-01]
+  442: SS-10-004  [mesh: SS-10-02]
+  443: SS-07-019
+    444: Solid012  [mesh: Solid012]
+    445: Shell007  [mesh: Shell007]
+  446: SS-07-018
+    447: Solid012  [mesh: Solid012]
+    448: Shell007  [mesh: Shell007]
+  449: SS-07-021  [mesh: SS-07-05]
+  450: SS-07-020  [mesh: SS-07-05]
+  451: SS-10_ASM
+    452: SS-10-01  [mesh: SS-10-01]
+    453: SS-10-02  [mesh: SS-10-02]
+    454: SS-10-003  [mesh: SS-10-01]
+    455: SS-10-004  [mesh: SS-10-02]
+    456: SS-07-018
+      457: Solid012  [mesh: Solid012]
+      458: Shell007  [mesh: Shell007]
+    459: SS-07-019
+      460: Solid012  [mesh: Solid012]
+      461: Shell007  [mesh: Shell007]
+    462: SS-10-03
+      463: Solid033  [mesh: Solid033]
+      464: Compound025  [mesh: Compound025]
+    465: SS-07-020  [mesh: SS-07-05]
+    466: SS-07-021  [mesh: SS-07-05]
+  467: PRT0274_3  [mesh: PRT0274_3]
+  468: PRT0274  [mesh: PRT0274]
+  469: PRT0275  [mesh: PRT0275]
+  470: 050_25_WZ_71B14_KZ_W_B3_ASM_3  [mesh: 050_25_WZ_71B14_KZ_W_B3_ASM_3]
+  471: PRT0272_3  [mesh: PRT0272_3]
+  472: PRT0275_3  [mesh: PRT0275_3]
+  473: PRT0272  [mesh: PRT0272]
+  474: Shell015  [mesh: Shell015]
+  475: DL-02  [mesh: DL-02]
+  476: Solid025  [mesh: Solid025]
+  477: Shell014  [mesh: Shell014]
+  478: Compound017  [mesh: Compound017]
+  479: SS-05  [mesh: SS-05]
+  480: DL-00  [mesh: DL-00]
+  481: SS-00  [mesh: SS-00]
+  482: SS-09  [mesh: SS-09]
+  483: SS-02
+    484: Solid001  [mesh: Solid001]
+    485: Compound  [mesh: Compound]
+  486: SE40X550S_000_____1_ASM
+    487: _SE-40550_SE  [mesh: _SE-40550_SE]
+    488: _SE-40X550-S_0__R  [mesh: _SE-40X550-S_0__R]
+    489: _SE-40-M12X1_25_-_NUT  [mesh: _SE-40-M12X1_25_-_NUT]
+  490: SE40X550S_000_____ASM
+    491: SE40X550S_000_____1  [mesh: SE40X550S_000_____1]
+  492: TC-005  [mesh: TC-04]
+
+Total nodes: 493
+Total meshes: 383
+Total materials: 1
+
+=== MATERIALS ===
+
+  0: mat_0
+
+=== MESH NAMES ===
+
+  0: \X2\53CC639294FE6EDA7B525934\X0\
+  1: \X2\53CC639294FE6EDA7B525C3E\X0\
+  2: \X2\53CC639294FE6EDA7B525934\X0\
+  3: \X2\53CC639294FE6EDA7B525C3E\X0\
+  4: \X2\53CC639294FE6EDA7B525934\X0\
+  5: \X2\53CC639294FE6EDA7B525C3E\X0\
+  6: \X2\53CC639294FE6EDA7B525934\X0\
+  7: \X2\53CC639294FE6EDA7B525C3E\X0\
+  8: \X2\53CC639294FE6EDA7B525934\X0\
+  9: \X2\53CC639294FE6EDA7B525C3E\X0\
+  10: \X2\53CC639294FE6EDA7B525934\X0\
+  11: \X2\53CC639294FE6EDA7B525C3E\X0\
+  12: \X2\53CC639294FE6EDA7B525934\X0\
+  13: \X2\53CC639294FE6EDA7B525C3E\X0\
+  14: Solid036
+  15: Compound029
+  16: Solid036
+  17: Compound029
+  18: Shell016
+  19: Compound020
+  20: SS-04
+  21: Solid029
+  22: Shell017
+  23: Solid030
+  24: \X2\65E052A8529B6EDA7B52\X0\
+  25: Shell018
+  26: Shell019
+  27: Compound022
+  28: Compound023
+  29: Shell020
+  30: Shell021
+  31: SS-10-01
+  32: Compound024
+  33: SS-01
+  34: Solid001
+  35: Shell001
+  36: Compound
+  37: \X2\53CC639294FE6EDA7B525934\X0\
+  38: Shell
+  39: Shell002
+  40: 0005
+  41: Solid007
+  42: Compound004
+  43: SS-07-01
+  44: SS-07-01
+  45: SS-07-02
+  46: SS-07-02
+  47: SS-07-02
+  48: SS-05
+  49: SS-04
+  50: \X2\65E052A8529B6EDA7B52\X0\
+  51: Solid029
+  52: Compound020
+  53: Solid029
+  54: Compound020
+  55: Solid029
+  56: Compound020
+  57: Solid029
+  58: Compound020
+  59: Solid029
+  60: Compound020
+  61: Solid029
+  62: Compound020
+  63: Solid029
+  64: Compound020
+  65: Solid029
+  66: Compound020
+  67: Solid030
+  68: Compound024
+  69: \X2\811A6491\X0\2
+  70: SS-10
+  71: Solid017
+  72: Compound008
+  73: Solid017
+  74: Compound008
+  75: ARTICULATED_F2103-1_1-107Z_G
+  76: ARTICULATED_F2103-1_1-107Z_G
+  77: SS-07-06
+  78: Solid009
+  79: Compound005
+  80: SS-07-05
+  81: SS-07-06
+  82: SS-07-05
+  83: SS-07-05
+  84: ARTICULATED_F2103-1_1-107Z_G
+  85: ARTICULATED_F2103-1_1-301Z_G
+  86: ARTICULATED_F2103-1_2Z_G
+  87: ARTICULATED_F2103-1_3Z_G
+  88: ARTICULATED_F2103-1_4Z_G
+  89: ARTICULATED_F2103-1_1-107Z_G
+  90: ARTICULATED_F2103-1_1-107Z_G
+  91: Solid017
+  92: Compound008
+  93: Solid017
+  94: Compound008
+  95: Solid017
+  96: Compound008
+  97: SS-07-01
+  98: SS-07-02
+  99: Solid007
+  100: Compound004
+  101: SS-07-02
+  102: SS-07-02
+  103: SS-07-01
+  104: SS-07-01
+  105: SS-07-02
+  106: SS-07-02
+  107: SS-07-06
+  108: SS-07-06
+  109: Solid009
+  110: Compound005
+  111: SS-07-06
+  112: SS-07-05
+  113: SS-07-05
+  114: SS-07-05
+  115: SS-07-05
+  116: SS-07-08
+  117: Solid012
+  118: Shell007
+  119: Solid012
+  120: Shell007
+  121: Solid012
+  122: Shell007
+  123: Solid012
+  124: Shell007
+  125: M16\X2\5730811A\X0\_G
+  126: ARTICULATED_F2103-1_1-107Z_G
+  127: ARTICULATED_F2103-1_1-107Z_G
+  128: ARTICULATED_F2103-1_1-107Z_G
+  129: Solid017
+  130: Compound008
+  131: Solid017
+  132: Compound008
+  133: Solid017
+  134: Compound008
+  135: Solid017
+  136: Compound008
+  137: PRT0271
+  138: PRT0273
+  139: PRT0274
+  140: PRT0275
+  141: PRT0272
+  142: ARTICULATED_F2103-1_1-107Z_G
+  143: Solid017
+  144: Compound008
+  145: \X2\811A6491\X0\2
+  146: TC-01
+  147: Solid036
+  148: SS-10
+  149: SS-000
+  150: TC-02
+  151: Shell027
+  152: _SE-40550_SE
+  153: Compound029
+  154: Shell026
+  155: TC-04
+  156: _SE-40X550-S_0__R
+  157: F-M12X125F
+  158: SE40X550S_000_____1
+  159: _SE-40-M12X1_25_-_NUT
+  160: SE40X550S_000____
+  161: SS-10
+  162: Solid017
+  163: Compound008
+  164: Solid017
+  165: Compound008
+  166: ARTICULATED_F2103-1_1-107Z_G
+  167: ARTICULATED_F2103-1_1-107Z_G
+  168: SS-10
+  169: Solid017
+  170: Compound008
+  171: Solid017
+  172: Compound008
+  173: ARTICULATED_F2103-1_1-107Z_G
+  174: ARTICULATED_F2103-1_1-107Z_G
+  175: Solid017
+  176: Compound008
+  177: Solid017
+  178: Compound008
+  179: ARTICULATED_F2103-1_1-107Z_G
+  180: ARTICULATED_F2103-1_1-107Z_G
+  181: Shell035
+  182: Shell036
+  183: Shell037
+  184: Solid043
+  185: Compound032
+  186: Shell038
+  187: Compound033
+  188: \X2\52549664\X0\
+  189: Shell039
+  190: Shell040
+  191: LMF20LUUZ_E
+  192: SS-11
+  193: Solid029
+  194: Compound020
+  195: Solid029
+  196: Compound020
+  197: Solid029
+  198: Compound020
+  199: Solid029
+  200: Compound020
+  201: Solid029
+  202: Compound020
+  203: Solid029
+  204: Compound020
+  205: Shell004
+  206: Shell003
+  207: SS-07-06
+  208: Solid007
+  209: Compound004
+  210: Compound005
+  211: Solid009
+  212: Shell006
+  213: Shell005
+  214: SS-07-08
+  215: Solid012
+  216: SS-07-05
+  217: Shell007
+  218: ARTICULATED_F2103-1_2Z_G
+  219: ARTICULATED_F2103-1_1-301Z_G
+  220: ARTICULATED_F2103-1_3Z_G
+  221: Solid017
+  222: ARTICULATED_F2103-1_4Z_G
+  223: ARTICULATED_F2103-1_1-107Z_G
+  224: M16\X2\5730811A\X0\_G
+  225: Compound008
+  226: SS-07
+  227: Shell009
+  228: Shell008
+  229: Shell011
+  230: Shell013
+  231: Solid018
+  232: Shell010
+  233: Shell012
+  234: PRT0271_3
+  235: PRT0273
+  236: PRT0271
+  237: Compound010
+  238: PRT0273_3
+  239: Solid030
+  240: Compound024
+  241: SS-10-02
+  242: Solid033
+  243: Shell024
+  244: Shell022
+  245: Shell023
+  246: Compound025
+  247: Shell025
+  248: Solid042
+  249: Compound032
+  250: LMF20LUUZ_E
+  251: Solid029
+  252: Compound020
+  253: Solid043
+  254: Compound033
+  255: Solid029
+  256: Compound020
+  257: Solid029
+  258: Compound020
+  259: SS-11
+  260: SS-00
+  261: SS-000
+  262: \X2\52549664\X0\
+  263: SS-11
+  264: SS-11
+  265: SS-11
+  266: SS-11
+  267: TC-01
+  268: TC-02
+  269: Solid036
+  270: Compound029
+  271: Solid036
+  272: Compound029
+  273: TC-04
+  274: SE40X550S_000____
+  275: TC-04
+  276: F-M12X125F
+  277: Solid042
+  278: Compound032
+  279: Solid043
+  280: Compound033
+  281: LMF20LUUZ_E
+  282: LMF20LUUZ_E
+  283: SS-11
+  284: SS-11
+  285: Solid042
+  286: Shell029
+  287: Shell028
+  288: Shell030
+  289: Shell031
+  290: Shell034
+  291: Shell033
+  292: Shell032
+  293: Solid012
+  294: Shell007
+  295: Solid012
+  296: Shell007
+  297: Solid012
+  298: Shell007
+  299: Solid012
+  300: Shell007
+  301: Solid018
+  302: Compound010
+  303: 0006
+  304: SS-03
+  305: \X2\53CC639294FE6EDA7B525C3E\X0\
+  306: DR2-08B11T-D50X15T-AGL670-RL610
+  307: SS-07-02
+  308: SS-07-01
+  309: Solid018
+  310: Compound010
+  311: 050_25_WZ_71B14_KZ_W_B3_ASM_3
+  312: DL-02
+  313: Solid025
+  314: Compound017
+  315: Solid025
+  316: Compound017
+  317: SS-01
+  318: Solid001
+  319: Compound
+  320: DR2-08B11T-D50X15T-AGL670-RL610
+  321: \X2\53CC639294FE6EDA7B525934\X0\
+  322: \X2\53CC639294FE6EDA7B525C3E\X0\
+  323: \X2\53CC639294FE6EDA7B525934\X0\
+  324: \X2\53CC639294FE6EDA7B525C3E\X0\
+  325: \X2\53CC639294FE6EDA7B525934\X0\
+  326: \X2\53CC639294FE6EDA7B525C3E\X0\
+  327: \X2\53CC639294FE6EDA7B525934\X0\
+  328: \X2\53CC639294FE6EDA7B525C3E\X0\
+  329: \X2\53CC639294FE6EDA7B525934\X0\
+  330: \X2\53CC639294FE6EDA7B525C3E\X0\
+  331: \X2\53CC639294FE6EDA7B525934\X0\
+  332: \X2\53CC639294FE6EDA7B525C3E\X0\
+  333: SS-03
+  334: SS-07
+  335: DL-00
+  336: SS-09
+  337: Solid033
+  338: Compound025
+  339: SS-07-02
+  340: SS-10-01
+  341: SS-10-02
+  342: Solid012
+  343: Shell007
+  344: Solid012
+  345: Shell007
+  346: SS-07-05
+  347: SS-07-05
+  348: SS-10-01
+  349: SS-10-02
+  350: SS-10-01
+  351: SS-10-02
+  352: Solid012
+  353: Shell007
+  354: Solid012
+  355: Shell007
+  356: Solid033
+  357: Compound025
+  358: SS-07-05
+  359: SS-07-05
+  360: PRT0274_3
+  361: PRT0274
+  362: PRT0275
+  363: 050_25_WZ_71B14_KZ_W_B3_ASM_3
+  364: PRT0272_3
+  365: PRT0275_3
+  366: PRT0272
+  367: Shell015
+  368: DL-02
+  369: Solid025
+  370: Shell014
+  371: Compound017
+  372: SS-05
+  373: DL-00
+  374: SS-00
+  375: SS-09
+  376: Solid001
+  377: Compound
+  378: _SE-40550_SE
+  379: _SE-40X550-S_0__R
+  380: _SE-40-M12X1_25_-_NUT
+  381: SE40X550S_000_____1
+  382: TC-04

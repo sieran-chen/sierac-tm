@@ -1,0 +1,92 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - link "返回项目列表" [ref=e58] [cursor=pointer]:
+          - /url: /projects
+          - img [ref=e59]
+          - text: 返回项目列表
+        - heading "sierac-tm" [level=1] [ref=e61]
+      - generic [ref=e62]:
+        - heading "基本信息" [level=2] [ref=e63]
+        - generic [ref=e64]:
+          - term [ref=e65]: 工作目录规则
+          - definition [ref=e66]: D:\AI\Sierac-tm
+      - generic [ref=e67]:
+        - heading "成本（本周期）" [level=2] [ref=e68]
+        - generic [ref=e69]:
+          - generic [ref=e70]: 0次会话
+          - generic [ref=e71]: —总时长
+      - generic [ref=e72]:
+        - heading "参与成员" [level=2] [ref=e73]
+        - table [ref=e74]:
+          - rowgroup [ref=e75]:
+            - row "成员 会话数 总时长" [ref=e76]:
+              - columnheader "成员" [ref=e77]
+              - columnheader "会话数" [ref=e78]
+              - columnheader "总时长" [ref=e79]
+          - rowgroup [ref=e80]:
+            - row "暂无参与数据" [ref=e81]:
+              - cell "暂无参与数据" [ref=e82]
+      - generic [ref=e83]:
+        - heading "Git 贡献" [level=2] [ref=e84]
+        - table [ref=e85]:
+          - rowgroup [ref=e86]:
+            - row "作者 日期 提交数 新增行 删除行 变更文件" [ref=e87]:
+              - columnheader "作者" [ref=e88]
+              - columnheader "日期" [ref=e89]
+              - columnheader "提交数" [ref=e90]
+              - columnheader "新增行" [ref=e91]
+              - columnheader "删除行" [ref=e92]
+              - columnheader "变更文件" [ref=e93]
+          - rowgroup [ref=e94]:
+            - row "暂无贡献数据（需配置 Git 采集）" [ref=e95]:
+              - cell "暂无贡献数据（需配置 Git 采集）" [ref=e96]
+```

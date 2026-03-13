@@ -1,5 +1,6 @@
 """
 Cursor Admin API 客户端（官方 Basic Auth：key 为 username，密码为空）
+All Cursor API calls must go through this module (single exit point).
 """
 
 import logging
@@ -10,6 +11,10 @@ import httpx
 from config import settings
 
 log = logging.getLogger("cursor_api")
+
+# 429 retry: max attempts and base delay in seconds
+AI_CODE_RATE_LIMIT_MAX_RETRIES = 5
+AI_CODE_RATE_LIMIT_BASE_DELAY = 1.0
 
 
 def _auth():
@@ -79,3 +84,49 @@ async def get_usage_events(
     )
     r.raise_for_status()
     return r.json()
+
+
+async def get_ai_code_commits(
+    start_date: str,
+    end_date: str,
+    page: int = 1,
+    page_size: int = 1000,
+    user: str | None = None,
+    etag: str | None = None,
+) -> dict:
+    """
+    GET /analytics/ai-code/commits.
+    Returns: {"commits": [...], "pagination": {"page", "pageSize", "totalCount"}}.
+    Supports If-None-Match (ETag) and 429 exponential backoff.
+    """
+    auth = _auth()
+    if not auth:
+        raise ValueError("CURSOR_API_TOKEN not configured")
+    params: dict = {
+        "startDate": start_date,
+        "endDate": end_date,
+        "page": page,
+        "pageSize": page_size,
+    }
+    if user:
+        params["user"] = user
+    url = f"{settings.cursor_api_url}/analytics/ai-code/commits"
+    headers: dict = {}
+    if etag:
+        headers["If-None-Match"] = etag
+    attempt = 0
+    while True:
+        async with httpx.AsyncClient(timeout=60) as client:
+            r = await client.get(url, auth=auth, params=params, headers=headers or None)
+        if r.status_code == 304:
+            return {"commits": [], "pagination": {"page": page, "pageSize": page_size, "totalCount": 0}, "cached": True}
+        if r.status_code == 429:
+            attempt += 1
+            if attempt > AI_CODE_RATE_LIMIT_MAX_RETRIES:
+                r.raise_for_status()
+            delay = AI_CODE_RATE_LIMIT_BASE_DELAY * (2 ** (attempt - 1))
+            log.warning("AI Code API 429, retry %d/%d in %.1fs", attempt, AI_CODE_RATE_LIMIT_MAX_RETRIES, delay)
+            time.sleep(delay)
+            continue
+        r.raise_for_status()
+        return r.json()

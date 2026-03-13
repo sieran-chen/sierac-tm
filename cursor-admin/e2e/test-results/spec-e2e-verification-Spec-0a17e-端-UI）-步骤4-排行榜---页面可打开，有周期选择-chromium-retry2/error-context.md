@@ -1,0 +1,92 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Cursor Admin
+    - navigation [ref=e6]:
+      - link "用量总览" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8]
+        - text: 用量总览
+      - link "项目" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+        - img [ref=e10]
+        - text: 项目
+      - link "我的项目" [ref=e15] [cursor=pointer]:
+        - /url: /my-projects
+        - img [ref=e16]
+        - text: 我的项目
+      - link "我的贡献" [ref=e20] [cursor=pointer]:
+        - /url: /my-contributions
+        - img [ref=e21]
+        - text: 我的贡献
+      - link "项目参与" [ref=e24] [cursor=pointer]:
+        - /url: /workspace
+        - img [ref=e25]
+        - text: 项目参与
+      - link "排行榜" [ref=e30] [cursor=pointer]:
+        - /url: /leaderboard
+        - img [ref=e31]
+        - text: 排行榜
+      - link "激励规则" [ref=e37] [cursor=pointer]:
+        - /url: /incentive-rules
+        - img [ref=e38]
+        - text: 激励规则
+      - link "支出管理" [ref=e41] [cursor=pointer]:
+        - /url: /spend
+        - img [ref=e42]
+        - text: 支出管理
+      - link "告警配置" [ref=e47] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e48]
+        - text: 告警配置
+      - link "告警历史" [ref=e51] [cursor=pointer]:
+        - /url: /events
+        - img [ref=e52]
+        - text: 告警历史
+    - generic [ref=e54]: Cursor Team Admin
+  - main [ref=e55]:
+    - generic [ref=e56]:
+      - heading "贡献排行榜" [level=1] [ref=e57]
+      - paragraph [ref=e58]: 按周期展示成员贡献得分排名；仅已接入 Hook 的成员参与排行（可切换显示全部）。
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: 周期类型
+          - combobox [ref=e62]:
+            - option "周" [selected]
+            - option "月"
+        - generic [ref=e63]:
+          - generic [ref=e64]: 周期
+          - combobox [ref=e65]:
+            - option "2026-W09" [selected]
+            - option "2026-W08"
+            - option "2026-W07"
+            - option "2026-W06"
+            - option "2026-W05"
+            - option "2026-W04"
+            - option "2026-W03"
+            - option "2026-W02"
+            - option "2026-W01"
+            - option "2025-W52"
+            - option "2025-W51"
+            - option "2025-W50"
+        - generic [ref=e66]:
+          - checkbox "仅已接入 Hook" [checked] [ref=e67]
+          - text: 仅已接入 Hook
+        - button "导出 CSV" [disabled] [ref=e68]
+      - generic [ref=e69]:
+        - generic [ref=e71]: 周 2026-W09
+        - table [ref=e72]:
+          - rowgroup [ref=e73]:
+            - row "排名 成员 总分 代码行数 Commit 数 Hook" [ref=e74]:
+              - columnheader "排名" [ref=e75]
+              - columnheader "成员" [ref=e76]
+              - columnheader "总分" [ref=e77]
+              - columnheader "代码行数" [ref=e78]
+              - columnheader "Commit 数" [ref=e79]
+              - columnheader "Hook" [ref=e80]
+          - rowgroup [ref=e81]:
+            - row "暂无排行数据。请确认该周期已执行过贡献度计算，且成员已接入 Hook。" [ref=e82]:
+              - cell "暂无排行数据。请确认该周期已执行过贡献度计算，且成员已接入 Hook。" [ref=e83]
+```

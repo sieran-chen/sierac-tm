@@ -1,5 +1,5 @@
-import { EffectComposer, Outline } from "@react-three/postprocessing";
-import * as THREE from "three";
+// import { EffectComposer, Outline } from "@react-three/postprocessing";
+import type * as THREE from "three";
 
 interface PartInteractionProps {
   /** Objects to outline on hover (e.g. meshes of the hovered part). */

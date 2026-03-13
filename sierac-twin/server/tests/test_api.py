@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi.testclient import TestClient
 
 from main import app
@@ -79,3 +81,41 @@ def test_history_unknown_point_returns_empty_data() -> None:
     assert r.status_code == 200
     assert r.json()["point_id"] == "nonexistent_point"
     assert r.json()["data"] == []
+
+
+def test_viewer_path_config_default(tmp_path, monkeypatch) -> None:
+    config_path = tmp_path / "viewer-calibration.json"
+    monkeypatch.setenv("TWIN_VIEWER_CONFIG_PATH", str(config_path))
+
+    r = client.get("/api/twin/equipment/roller-001/viewer-path-config")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["start"]["front"] == -8
+    assert data["start"]["right"] == 8.5
+    assert data["waypoint"] is None
+    assert data["end"]["right"] == -8.5
+
+
+def test_viewer_path_config_save_and_reload(tmp_path, monkeypatch) -> None:
+    config_path = tmp_path / "viewer-calibration.json"
+    monkeypatch.setenv("TWIN_VIEWER_CONFIG_PATH", str(config_path))
+
+    payload = {
+        "start": {"x": -8, "z": 8.5, "front": -8, "up": 0, "right": 8.5},
+        "waypoint": {"x": -2, "z": 1.5, "front": -2, "up": 0, "right": 1.5},
+        "end": {"x": -8.46, "z": -0.74, "front": 0, "up": 0, "right": -8.5},
+    }
+
+    put_response = client.put(
+        "/api/twin/equipment/roller-001/viewer-path-config",
+        json=payload,
+    )
+    assert put_response.status_code == 200
+    assert put_response.json() == payload
+
+    saved_file = json.loads(config_path.read_text(encoding="utf-8"))
+    assert saved_file["roller-001"]["waypoint"]["front"] == -2
+
+    get_response = client.get("/api/twin/equipment/roller-001/viewer-path-config")
+    assert get_response.status_code == 200
+    assert get_response.json() == payload

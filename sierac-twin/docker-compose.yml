@@ -7,6 +7,9 @@ services:
       - TWIN_PORT=8100
       - TWIN_TICK_INTERVAL=1
       - TWIN_CORS_ORIGINS=*
+      - TWIN_VIEWER_CONFIG_PATH=/app/config/viewer-calibration.json
+    volumes:
+      - ./config:/app/config
     restart: unless-stopped
 
   twin-web:

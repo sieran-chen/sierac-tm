@@ -110,3 +110,17 @@ export interface HistoryResponse {
   max: number | null;
   data: HistoryDataPoint[];
 }
+
+export interface CalibrationPoint {
+  x: number;
+  z: number;
+  front: number;
+  up: number;
+  right: number;
+}
+
+export interface ViewerPathConfig {
+  start: CalibrationPoint;
+  waypoint: CalibrationPoint | null;
+  end: CalibrationPoint;
+}

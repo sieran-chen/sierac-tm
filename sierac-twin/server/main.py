@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,15 +14,45 @@ from history_buffer import HistoryBuffer
 from mock_engine import MockEngine
 from models import (
     Alarm,
+    CalibrationPoint,
     EquipmentSummary,
     HistoryDataPoint,
     HistoryResponse,
     TelemetryValue,
+    ViewerPathConfig,
 )
 
 engine = MockEngine()
 history_buffer = HistoryBuffer(max_seconds=86400)  # 24h
 TICK_INTERVAL = float(os.getenv("TWIN_TICK_INTERVAL", "1"))
+
+
+def _viewer_config_path() -> Path:
+    return Path(os.getenv("TWIN_VIEWER_CONFIG_PATH", "/app/config/viewer-calibration.json"))
+
+
+def _default_viewer_path_config() -> ViewerPathConfig:
+    return ViewerPathConfig(
+        start=CalibrationPoint(x=-8, z=8.5, front=-8, up=0, right=8.5),
+        waypoint=None,
+        end=CalibrationPoint(x=-8.467655, z=-0.740533, front=0, up=0, right=-8.5),
+    )
+
+
+def _load_all_viewer_configs() -> dict[str, dict]:
+    path = _viewer_config_path()
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=500, detail=f"Invalid viewer config JSON: {exc}") from exc
+
+
+def _save_all_viewer_configs(configs: dict[str, dict]) -> None:
+    path = _viewer_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(configs, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def _append_telemetry_to_history(equipment_id: str) -> None:
@@ -133,6 +165,31 @@ async def get_history(
         max=max_val,
         data=[HistoryDataPoint(timestamp=d["timestamp"], value=d["value"]) for d in data],
     )
+
+
+@app.get(
+    "/api/twin/equipment/{equipment_id}/viewer-path-config",
+    response_model=ViewerPathConfig,
+)
+async def get_viewer_path_config(equipment_id: str) -> ViewerPathConfig:
+    configs = _load_all_viewer_configs()
+    saved = configs.get(equipment_id)
+    if saved is None:
+        return _default_viewer_path_config()
+    return ViewerPathConfig.model_validate(saved)
+
+
+@app.put(
+    "/api/twin/equipment/{equipment_id}/viewer-path-config",
+    response_model=ViewerPathConfig,
+)
+async def put_viewer_path_config(
+    equipment_id: str, config: ViewerPathConfig
+) -> ViewerPathConfig:
+    configs = _load_all_viewer_configs()
+    configs[equipment_id] = config.model_dump(mode="json")
+    _save_all_viewer_configs(configs)
+    return config
 
 
 if __name__ == "__main__":

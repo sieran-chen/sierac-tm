@@ -71,3 +71,17 @@ class HistoryResponse(BaseModel):
     min: float | None
     max: float | None
     data: list[HistoryDataPoint]
+
+
+class CalibrationPoint(BaseModel):
+    x: float
+    z: float
+    front: float
+    up: float
+    right: float
+
+
+class ViewerPathConfig(BaseModel):
+    start: CalibrationPoint
+    waypoint: CalibrationPoint | None = None
+    end: CalibrationPoint

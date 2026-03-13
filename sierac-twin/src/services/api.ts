@@ -3,12 +3,16 @@ import type {
   TelemetryValue,
   Alarm,
   HistoryResponse,
+  ViewerPathConfig,
 } from "@/types/equipment";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
-async function fetchJSON<T>(url: string): Promise<T> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    ...init,
+    signal: AbortSignal.timeout(3000),
+  });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -43,4 +47,23 @@ export function fetchHistory(
   return fetchJSON(
     `${BASE_URL}/api/twin/equipment/${equipmentId}/history?${params}`
   );
+}
+
+export function fetchViewerPathConfig(
+  equipmentId: string
+): Promise<ViewerPathConfig> {
+  return fetchJSON(`${BASE_URL}/api/twin/equipment/${equipmentId}/viewer-path-config`);
+}
+
+export function saveViewerPathConfig(
+  equipmentId: string,
+  config: ViewerPathConfig
+): Promise<ViewerPathConfig> {
+  return fetchJSON(`${BASE_URL}/api/twin/equipment/${equipmentId}/viewer-path-config`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(config),
+  });
 }

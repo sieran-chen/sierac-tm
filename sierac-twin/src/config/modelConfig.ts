@@ -1,9 +1,9 @@
 /** GLB path; when missing or load error, viewer falls back to image sphere. */
 export const MODEL_CONFIG = {
-  path: "/models/roller_reject.glb",
-  /** FreeCAD exports in meters; scale up so ~1.3m model fills the view. */
-  scale: 8,
-  position: [0, -6, 0] as [number, number, number],
+  path: "/models/001-web.glb",
+  /** Web-optimized 001 model exported from Blender. */
+  scale: 0.03,
+  position: [0, 0, 0] as [number, number, number],
   rotation: [0, (85 * Math.PI) / 180, 0] as [number, number, number],
 };
 

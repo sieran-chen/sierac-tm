@@ -1,8 +1,10 @@
 import { useRef, useMemo, useEffect } from "react";
-import { useGLTF } from "@react-three/drei";
+import { Html, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { SkeletonUtils } from "three-stdlib";
 import type { PartMapping, Alarm, TelemetryValue } from "@/types/equipment";
+import { sceneToWorld, worldToScene } from "@/config/coordinateSystem";
 import { MODEL_CONFIG, KNOWN_PARTS } from "@/config/modelConfig";
 import { usePartInteraction } from "@/hooks/usePartInteraction";
 import PartInteraction from "./PartInteraction";
@@ -18,28 +20,113 @@ interface ModelViewerProps {
   partMapping: PartMapping[];
   alarms: Alarm[];
   telemetry?: TelemetryValue[];
+  pathPoints?: {
+    start: CalibrationPoint;
+    waypoint?: CalibrationPoint | null;
+    end: CalibrationPoint;
+  };
+  calibrationTarget?: "start" | "waypoint" | "end";
+  pendingCalibrationPoint?: CalibrationPoint | null;
+  onCalibrationPick?: (point: CalibrationPoint) => void;
   onPartClick?: (partName: string, screenPos: { x: number; y: number }) => void;
   onPartHover?: (partName: string | null) => void;
 }
 
+type CalibrationPoint = {
+  x: number;
+  z: number;
+  front: number;
+  up: number;
+  right: number;
+};
+
 const ALARM_RED = new THREE.Color(1, 0.1, 0.1);
 const ALARM_ORANGE = new THREE.Color(1, 0.5, 0);
 const HOVER_EMISSIVE = new THREE.Color(0.2, 0.4, 0.8);
+const MODEL_EULER = new THREE.Euler(...MODEL_CONFIG.rotation);
+const MODEL_POSITION = new THREE.Vector3(...MODEL_CONFIG.position);
+const MODEL_QUATERNION = new THREE.Quaternion().setFromEuler(MODEL_EULER);
+const MODEL_QUATERNION_INVERSE = MODEL_QUATERNION.clone().invert();
+const DEFAULT_START_POINT = makeWorldPointFromScene(-8, 0, 8.5, false);
+const DEFAULT_END_POINT = makeWorldPointFromScene(0, 0, -8.5, true);
+const PUSHER_START_SCENE = { front: 0.8, up: 0, right: -18.1 } as const;
+const TO_WAYPOINT_PORTION = 0.5;
+const PUSH_PORTION = 0.25;
+
+function sceneCoordToAlignedWorld(front: number, up: number, right: number) {
+  const [x, y, z] = sceneToWorld(front, up, right);
+  return new THREE.Vector3(x, y, z).applyQuaternion(MODEL_QUATERNION).add(MODEL_POSITION);
+}
+
+function sceneCoordToWorld(front: number, up: number, right: number) {
+  const [x, y, z] = sceneToWorld(front, up, right);
+  return new THREE.Vector3(x, y, z).add(MODEL_POSITION);
+}
+
+function makeWorldPointFromScene(front: number, up: number, right: number, alignWithModel: boolean) {
+  const world = alignWithModel
+    ? sceneCoordToAlignedWorld(front, up, right)
+    : sceneCoordToWorld(front, up, right);
+
+  return {
+    x: world.x,
+    z: world.z,
+    front,
+    up,
+    right,
+  };
+}
+
+function worldPointToScene(point: THREE.Vector3): CalibrationPoint {
+  const local = point.clone().sub(MODEL_POSITION).applyQuaternion(MODEL_QUATERNION_INVERSE);
+  const scenePoint = worldToScene(local.x, local.y, local.z);
+
+  return {
+    x: point.x,
+    z: point.z,
+    front: Number(scenePoint.front.toFixed(2)),
+    up: Number(scenePoint.up.toFixed(2)),
+    right: Number(scenePoint.right.toFixed(2)),
+  };
+}
+
+function formatCoord(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
 
 export default function ModelViewer({
   modelPath = MODEL_CONFIG.path,
   partMapping,
   alarms,
   telemetry = [],
+  pathPoints,
+  calibrationTarget = "end",
+  pendingCalibrationPoint = null,
+  onCalibrationPick,
   onPartClick,
   onPartHover,
 }: ModelViewerProps) {
-  const { scene } = useGLTF(modelPath);
+  const { scene: rawScene } = useGLTF(modelPath);
+
+  // Clone so each mount gets an independent scene graph (useGLTF caches the original).
+  // The GLB (roller_reject_clean.glb) has already had duplicate nodes removed at
+  // build time, so no runtime visibility patching is needed.
+  const scene = useMemo(() => SkeletonUtils.clone(rawScene) as THREE.Group, [rawScene]);
+
   const groupRef = useRef<THREE.Group>(null);
   const conveyorProductRef = useRef<THREE.Mesh>(null);
+  const virtualPusherRef = useRef<THREE.Mesh>(null);
+  const startMarkerRef = useRef<THREE.Mesh>(null);
+  const waypointMarkerRef = useRef<THREE.Mesh>(null);
+  const endMarkerRef = useRef<THREE.Mesh>(null);
+  const calibrationMarkerRef = useRef<THREE.Mesh>(null);
   const nativePusherRef = useRef<THREE.Object3D | null>(null);
   const pusherRestPos = useRef<THREE.Vector3 | null>(null);
   const productOffsetRef = useRef(0);
+  const productSizeRef = useRef(new THREE.Vector3(120, 80, 120));
+  const productWorldSizeRef = useRef(new THREE.Vector3(3.6, 2.4, 2.4));
+  const pusherSizeRef = useRef(new THREE.Vector3(130, 150, 20));
+  const pusherWorldSizeRef = useRef(new THREE.Vector3(3.9, 4.5, 0.6));
   const prevEmissiveStateRef = useRef<Map<string, string>>(new Map());
   const conveyorSurfaceYRef = useRef<{
     y: number;
@@ -57,23 +144,6 @@ export default function ModelViewer({
     nativePusherRef.current = null;
     pusherRestPos.current = null;
 
-    // FreeCAD flattens assemblies: parts appear both inside _ASM groups
-    // AND as loose siblings at root level. Only keep _ASM assembly nodes
-    // visible; hide everything else to eliminate overlap.
-    const rootGroup = scene.children[0]; // "Unnamed1"
-    if (rootGroup) {
-      let hidden = 0;
-      for (const child of rootGroup.children) {
-        if (!child.name.endsWith("_ASM")) {
-          child.visible = false;
-          hidden++;
-        }
-      }
-      if (import.meta.env.DEV) {
-        console.log(`[ModelViewer] Hidden ${hidden}/${rootGroup.children.length} non-ASM root nodes`);
-      }
-    }
-
     scene.updateWorldMatrix(true, true);
     const box = new THREE.Box3().setFromObject(scene);
     const size = new THREE.Vector3();
@@ -90,6 +160,18 @@ export default function ModelViewer({
         sizeY: size.y,
         sizeZ: size.z,
       };
+      productSizeRef.current.set(
+        Math.max(size.x * 0.12, 80),
+        Math.max(size.y * 0.10, 60),
+        Math.max(size.z * 0.08, 80),
+      );
+      productWorldSizeRef.current.copy(productSizeRef.current).multiplyScalar(MODEL_CONFIG.scale);
+      pusherSizeRef.current.set(
+        Math.max(size.x * 0.18, 100),
+        Math.max(size.y * 0.20, 120),
+        Math.max(size.z * 0.025, 18),
+      );
+      pusherWorldSizeRef.current.copy(pusherSizeRef.current).multiplyScalar(MODEL_CONFIG.scale);
       if (import.meta.env.DEV) {
         console.log("[ModelViewer] scene bbox:", center, "size:", size);
       }
@@ -186,91 +268,109 @@ export default function ModelViewer({
     const delta = prevTimeRef.current !== null ? t - prevTimeRef.current : 0.016;
     prevTimeRef.current = t;
 
-      // L-path: feed (+Z) → junction → reject (+X) → hold 2s → reset
-      //
-      // Coordinate mapping (confirmed by user):
-      //   +X = reject section direction (original working motion, keep as-is)
-      //   +Z = feed section direction (Y向 in xyrrr.png)
-      //   Origin (0,_,0) = junction between feed and reject sections
-      //
-      // Leg A — feed: X=0 fixed, Z from Z_START (near end, -Y side) → 0 (junction)
-      // Leg B — reject: Z=0 fixed, X from 0 → X_EXIT (+X, original motion)
-      // Hold 2s at exit, then reset invisible
       const surface = conveyorSurfaceYRef.current;
       const productMesh = conveyorProductRef.current;
       if (productMesh && surface) {
         const beltSpeed = getTelemetryNumber(telemetry, "belt_speed");
-        const speed = Math.max(0.3, beltSpeed * 0.03);
+        const productHalfH = productSizeRef.current.y * 0.5;
+        const offsetUp = 50;
+        const startPathPoint = pathPoints?.start ?? DEFAULT_START_POINT;
+        const waypointPathPoint = pathPoints?.waypoint ?? null;
+        const endPathPoint = pathPoints?.end ?? DEFAULT_END_POINT;
+        const phaseSpeed = Math.max(0.08, beltSpeed / 120);
+        productOffsetRef.current = (productOffsetRef.current + phaseSpeed * delta) % 1;
+        const cyclePhase = productOffsetRef.current;
+        const pusherStartPoint = sceneCoordToAlignedWorld(
+          PUSHER_START_SCENE.front,
+          PUSHER_START_SCENE.up,
+          PUSHER_START_SCENE.right,
+        );
+        let boxX = startPathPoint.x;
+        let boxZ = startPathPoint.z;
+        let pusherX = pusherStartPoint.x;
+        let pusherZ = pusherStartPoint.z;
+        const y = MODEL_CONFIG.position[1] + (surface.y + productHalfH + offsetUp) * MODEL_CONFIG.scale;
+        const pusherBaseY =
+          MODEL_CONFIG.position[1] + (surface.y + PUSHER_START_SCENE.up) * MODEL_CONFIG.scale;
 
-        const posY = surface.maxY + 0.05;
+        if (waypointPathPoint) {
+          const pushDeltaX = endPathPoint.x - waypointPathPoint.x;
+          const pushDeltaZ = endPathPoint.z - waypointPathPoint.z;
+          const pusherEndX = pusherStartPoint.x + pushDeltaX;
+          const pusherEndZ = pusherStartPoint.z + pushDeltaZ;
 
-        // Coordinates in model-local space (meters, FreeCAD export)
-        // Leg A — feed: Z~-0.3 fixed, X from -0.5 → 0 (center)
-        // Leg B — reject: X~0 fixed, Z from -0.3 → +0.5
-        const X_START    = -0.5;
-        const X_MID      =  0.0;
-        const Z_FEED     = -0.3;
-        const Z_EXIT     =  0.5;
-
-        const LEG_A      = X_MID - X_START;       // 0.5 units
-        const LEG_B      = Z_EXIT - Z_FEED;        // 0.8 units
-        const HOLD_DIST  = speed * 2.0;
-        const RESET_DIST = speed * 0.5;
-        const CYCLE      = LEG_A + LEG_B + HOLD_DIST + RESET_DIST;
-
-        productOffsetRef.current += speed * delta;
-        if (productOffsetRef.current >= CYCLE) {
-          productOffsetRef.current -= CYCLE;
+          if (cyclePhase < TO_WAYPOINT_PORTION) {
+            const t1 = cyclePhase / TO_WAYPOINT_PORTION;
+            boxX = THREE.MathUtils.lerp(startPathPoint.x, waypointPathPoint.x, t1);
+            boxZ = THREE.MathUtils.lerp(startPathPoint.z, waypointPathPoint.z, t1);
+          } else if (cyclePhase < TO_WAYPOINT_PORTION + PUSH_PORTION) {
+            const t2 = (cyclePhase - TO_WAYPOINT_PORTION) / PUSH_PORTION;
+            boxX = THREE.MathUtils.lerp(waypointPathPoint.x, endPathPoint.x, t2);
+            boxZ = THREE.MathUtils.lerp(waypointPathPoint.z, endPathPoint.z, t2);
+            pusherX = THREE.MathUtils.lerp(pusherStartPoint.x, pusherEndX, t2);
+            pusherZ = THREE.MathUtils.lerp(pusherStartPoint.z, pusherEndZ, t2);
+          } else {
+            const retractPortion = 1 - TO_WAYPOINT_PORTION - PUSH_PORTION;
+            const t3 = retractPortion > 0 ? (cyclePhase - TO_WAYPOINT_PORTION - PUSH_PORTION) / retractPortion : 1;
+            boxX = endPathPoint.x;
+            boxZ = endPathPoint.z;
+            pusherX = THREE.MathUtils.lerp(pusherStartPoint.x + pushDeltaX, pusherStartPoint.x, t3);
+            pusherZ = THREE.MathUtils.lerp(pusherStartPoint.z + pushDeltaZ, pusherStartPoint.z, t3);
+          }
+        } else {
+          boxX = THREE.MathUtils.lerp(startPathPoint.x, endPathPoint.x, cyclePhase);
+          boxZ = THREE.MathUtils.lerp(startPathPoint.z, endPathPoint.z, cyclePhase);
         }
-        const off = productOffsetRef.current;
+
+        productMesh.scale.copy(productWorldSizeRef.current);
+        productMesh.position.set(boxX, y, boxZ);
+        productMesh.rotation.set(...MODEL_CONFIG.rotation);
+        productMesh.visible = true;
+
+        if (startMarkerRef.current) {
+          startMarkerRef.current.position.set(startPathPoint.x, y, startPathPoint.z);
+        }
+        if (waypointMarkerRef.current) {
+          waypointMarkerRef.current.visible = Boolean(waypointPathPoint);
+          if (waypointPathPoint) {
+            waypointMarkerRef.current.position.set(waypointPathPoint.x, y, waypointPathPoint.z);
+          }
+        }
+        if (endMarkerRef.current) {
+          endMarkerRef.current.position.set(endPathPoint.x, y, endPathPoint.z);
+        }
+        if (calibrationMarkerRef.current) {
+          calibrationMarkerRef.current.visible = Boolean(pendingCalibrationPoint);
+          if (pendingCalibrationPoint) {
+            calibrationMarkerRef.current.position.set(
+              pendingCalibrationPoint.x,
+              y,
+              pendingCalibrationPoint.z,
+            );
+          }
+        }
 
         const pusherObj = nativePusherRef.current;
-        const restPos = pusherRestPos.current;
-        // Native pusher fires along +Z in model-local coords (push stroke ~0.3m)
-        const PUSH_STROKE      = 0.3;
-        const PUSH_DURATION    = speed * 0.4;
+        if (pusherObj) {
+          pusherObj.visible = false;
+        }
 
-        if (off < LEG_A) {
-          const frac = off / LEG_A;
-          productMesh.position.set(X_START + frac * LEG_A, posY, Z_FEED);
-          productMesh.visible = true;
-          if (pusherObj && restPos) pusherObj.position.copy(restPos);
-        } else if (off < LEG_A + PUSH_DURATION) {
-          const pushFrac = (off - LEG_A) / PUSH_DURATION;
-          // Pusher fires fast (0→30%) then retracts (30→100%)
-          let strokeFrac: number;
-          if (pushFrac < 0.3) {
-            strokeFrac = pushFrac / 0.3;
-          } else {
-            strokeFrac = 1 - (pushFrac - 0.3) / 0.7;
-          }
-          if (pusherObj && restPos) {
-            pusherObj.position.copy(restPos);
-            pusherObj.position.z += strokeFrac * PUSH_STROKE;
-          }
-          const boxZ = pushFrac < 0.3 ? Z_FEED : Z_FEED + (pushFrac - 0.3) / 0.7 * 0.1;
-          productMesh.position.set(X_MID, posY, boxZ);
-          productMesh.visible = true;
-        } else if (off < LEG_A + LEG_B) {
-          const slideStart = Z_FEED + 0.1;
-          const frac = (off - LEG_A - PUSH_DURATION) / (LEG_B - PUSH_DURATION);
-          const boxZ = slideStart + frac * (Z_EXIT - slideStart);
-          productMesh.position.set(X_MID, posY, boxZ);
-          productMesh.visible = true;
-          if (pusherObj && restPos) pusherObj.position.copy(restPos);
-        } else if (off < LEG_A + LEG_B + HOLD_DIST) {
-          productMesh.position.set(X_MID, posY, Z_EXIT);
-          productMesh.visible = true;
-          if (pusherObj && restPos) pusherObj.position.copy(restPos);
-        } else {
-          productMesh.visible = false;
-          if (pusherObj && restPos) pusherObj.position.copy(restPos);
+        const virtualPusher = virtualPusherRef.current;
+        if (virtualPusher) {
+          const pushWidth = pusherWorldSizeRef.current.x;
+          const pushHeight = pusherWorldSizeRef.current.y;
+          virtualPusher.position.set(
+            pusherX,
+            pusherBaseY + pushHeight * 0.45,
+            pusherZ,
+          );
+          virtualPusher.scale.set(pushWidth, pushHeight, pusherWorldSizeRef.current.z);
+          virtualPusher.rotation.set(...MODEL_CONFIG.rotation);
+          virtualPusher.visible = true;
         }
       }
 
-    // Data-driven animation: rotate parts from telemetry.
-    // MIN_SPEED ensures visible motion even when equipment is idle/stopped.
-    const MIN_SPEED = 0.5; // rad/s
+    const MIN_SPEED = 0.5;
     partMapping.forEach((part) => {
       if (!part.animation) return;
       const obj = partMap.get(part.partName);
@@ -325,12 +425,63 @@ export default function ModelViewer({
         rotation={MODEL_CONFIG.rotation}
       >
         <primitive object={scene} />
-        {/* Product box on conveyor (cargo being transported) */}
-        <mesh ref={conveyorProductRef} castShadow receiveShadow>
-          <boxGeometry args={[0.15, 0.2, 0.12]} />
-          <meshStandardMaterial color="#f59e0b" metalness={0.1} roughness={0.8} />
-        </mesh>
       </group>
+      {/* Box/pusher are in world coordinates so they match the visible axes exactly. */}
+      <mesh ref={conveyorProductRef} castShadow receiveShadow>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#f59e0b" metalness={0.1} roughness={0.8} />
+      </mesh>
+      <mesh ref={virtualPusherRef} castShadow receiveShadow>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="#64748b" metalness={0.45} roughness={0.45} />
+      </mesh>
+      {onCalibrationPick && (
+        <group position={MODEL_CONFIG.position} rotation={MODEL_CONFIG.rotation}>
+          <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, 0.02, 0]}
+            onClick={(event) => {
+              event.stopPropagation();
+              onCalibrationPick(worldPointToScene(event.point.clone()));
+            }}
+          >
+            <planeGeometry args={[42, 42]} />
+            <meshBasicMaterial color="#fde047" transparent opacity={0.08} side={THREE.DoubleSide} />
+          </mesh>
+        </group>
+      )}
+      <mesh ref={startMarkerRef}>
+        <sphereGeometry args={[0.35, 20, 20]} />
+        <meshBasicMaterial color="#10b981" />
+        <Html center position={[0, 0.9, 0]} style={{ color: "#10b981", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 4px rgba(0,0,0,0.85)" }}>
+          {`起点 (${formatCoord((pathPoints?.start ?? DEFAULT_START_POINT).front)}, ${formatCoord((pathPoints?.start ?? DEFAULT_START_POINT).right)})`}
+        </Html>
+      </mesh>
+      <mesh ref={waypointMarkerRef} visible={Boolean(pathPoints?.waypoint)}>
+        <sphereGeometry args={[0.35, 20, 20]} />
+        <meshBasicMaterial color="#38bdf8" />
+        {pathPoints?.waypoint && (
+          <Html center position={[0, 0.9, 0]} style={{ color: "#38bdf8", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 4px rgba(0,0,0,0.85)" }}>
+            {`途径点 (${formatCoord(pathPoints.waypoint.front)}, ${formatCoord(pathPoints.waypoint.right)})`}
+          </Html>
+        )}
+      </mesh>
+      <mesh ref={endMarkerRef}>
+        <sphereGeometry args={[0.35, 20, 20]} />
+        <meshBasicMaterial color="#f43f5e" />
+        <Html center position={[0, 0.9, 0]} style={{ color: "#f43f5e", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 4px rgba(0,0,0,0.85)" }}>
+          {`终点 (${formatCoord((pathPoints?.end ?? DEFAULT_END_POINT).front)}, ${formatCoord((pathPoints?.end ?? DEFAULT_END_POINT).right)})`}
+        </Html>
+      </mesh>
+      <mesh ref={calibrationMarkerRef} visible={false}>
+        <sphereGeometry args={[0.42, 20, 20]} />
+        <meshBasicMaterial color="#eab308" />
+        {pendingCalibrationPoint && (
+          <Html center position={[0, 1.05, 0]} style={{ color: "#fde047", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 4px rgba(0,0,0,0.85)" }}>
+            {`${calibrationTarget === "start" ? "候选起点" : calibrationTarget === "waypoint" ? "候选途径点" : "候选终点"} (${formatCoord(pendingCalibrationPoint.front)}, ${formatCoord(pendingCalibrationPoint.right)}, ${formatCoord(pendingCalibrationPoint.up)})`}
+          </Html>
+        )}
+      </mesh>
       <PartInteraction selection={hoveredMeshes} />
     </>
   );

@@ -63,7 +63,7 @@ export default function TwinLayout({ equipmentId }: TwinLayoutProps) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left: 3D Viewer */}
         <div className="flex-[3] min-w-0">
-          <EquipmentViewer alarms={alarms} telemetry={telemetry} />
+          <EquipmentViewer equipmentId={equipmentId} alarms={alarms} telemetry={telemetry} />
         </div>
 
         {/* Right: Data Panel */}
